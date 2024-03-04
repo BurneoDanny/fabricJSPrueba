@@ -7,6 +7,7 @@ import SideItem from './sideItem/sideItem'
 import SubMenu from './SubMenu/SubMenu';
 
 
+
 export default function SideBar(props) {
   const [isSubMenuOpen, setSubMenuOpen] = useState(false);
   const [menuName, setMenuName] = useState("");
@@ -49,6 +50,9 @@ export default function SideBar(props) {
           accept="image/*"
           onChange={handleFileChange}
         />
+
+        <SideItem name="Exportar" svg={<QuestionMarkSVG />} toogle={() => toggleSubMenu("Exportar")} />
+
         <button
           className="flex flex-col w-20 h-15 items-center justify-center space-y-1
                 text-black dark:text-gray-300 p-2
@@ -62,7 +66,7 @@ export default function SideBar(props) {
           <span className="hidden xl:block mx-2 text-xs font-medium text-center">Exportar</span>
         </button>
       </nav>
-      <SubMenu flag={isSubMenuOpen} name={menuName} />
+      <SubMenu flag={isSubMenuOpen} name={menuName} generateDownload = {props.generateDownload} generatePDF={props.generatePDF} svg={<QuestionMarkSVG />}/>
     </aside>
 
 

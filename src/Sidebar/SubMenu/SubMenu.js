@@ -46,6 +46,41 @@ export default function SubMenu(props) {
                     </div>
                 </div>
             }
+            
+            {props.name === "Exportar" &&
+                <div className="flex flex-row h-full overflow-x-auto">
+                    <div>
+                     <button
+                      className="flex flex-col w-20 h-15 items-center justify-center space-y-1
+                       text-black dark:text-gray-300 p-2
+                       transition-colors duration-300 transform rounded-lg
+                       hover:bg-gray-100 dark:hover:bg-gray-800 dark:hover:text-gray-200 
+                       hover:text-gray-700"
+                       onClick={props.generateDownload}>  
+                      <div className=' w-5 h-5 xl:w-8 xl:h-8'>
+                      {props.svg}
+                     </div> 
+                      <span className="hidden xl:block mx-2 text-xs font-medium text-center">PNG</span>
+                       </button>
+                    </div>
+
+                    <div>
+                    <button
+                      className="flex flex-col w-20 h-15 items-center justify-center space-y-1
+                       text-black dark:text-gray-300 p-2
+                       transition-colors duration-300 transform rounded-lg
+                       hover:bg-gray-100 dark:hover:bg-gray-800 dark:hover:text-gray-200 
+                       hover:text-gray-700"
+                       onClick={props.generatePDF}>  
+                      <div className=' w-5 h-5 xl:w-8 xl:h-8'>
+                      {props.svg}
+                     </div> 
+                      <span className="hidden xl:block mx-2 text-xs font-medium text-center">PDF</span>
+                       </button>
+                    </div>
+                    
+                </div>
+            }
         </section>
 
 

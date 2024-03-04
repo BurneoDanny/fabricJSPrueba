@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { fabric } from 'fabric';
 import SideBar from '../Sidebar/Sidebar';
 import FabricJS from './FabricsJS/FabricJS';
+import jsPDF from 'jspdf';
+
 
 export default function CanvasContainer() {
   const [canvas, setCanvas] = useState(null);
@@ -93,10 +95,20 @@ export default function CanvasContainer() {
     }
   };
 
+  const generatePDF = () => {
+    console.log('pdf')
+    if(canvas){
+      const doc = new jsPDF();
+      const imgData = canvas.toDataURL({ format: 'png' })
+      doc.addImage(imgData, 'png',0,0)
+      doc.save("dowload.pdf")
+    }
+  }
+
 
   return (
     <div>
-      <SideBar onImageUpload={handleImageUpload} generateDownload={generateDownload} />
+      <SideBar onImageUpload={handleImageUpload} generateDownload={generateDownload} generatePDF={generatePDF}/>
       <FabricJS canvas={canvas} />
     </div>
   );
