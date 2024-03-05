@@ -1,5 +1,6 @@
 import { useState } from "react"
-import Circle from '@uiw/react-color-circle';
+import Sketch from '@uiw/react-color-sketch';
+
 
 
 
@@ -7,6 +8,7 @@ export default function Fuentes(props){
   const [text,setText] = useState(props.text)
 
   const [hex, setHex] = useState('#000000');
+  const [disableAlpha, setDisableAlpha] = useState(false);
 
 
 
@@ -17,24 +19,21 @@ export default function Fuentes(props){
       if(props.canvas.getActiveObject().get('type')==='textbox'){
         props.canvas.getActiveObject().set({fill: cValue})
         props.canvas.renderAll()
+        //setHex(cValue);
       }
     }
-
-  const changeSize = (sValue) =>{
-
   }
 
-}
-
   return(
-    <Circle
-      colors={[ '#000000', '#F44E3B', '#FE9200', '#FCDC00', '#3f51b5' ]}
-      color={hex}
-      onChange={(color) => {
-        setHex(color.hex);
-      }}
-      onClick={changeColor(hex)}
-    />
+    <Sketch
+        style={{ marginLeft: 20 }}
+        color={hex}
+        disableAlpha={disableAlpha}
+        onChange={(color) => {
+          setHex(color.hex);
+          changeColor(hex);
+        }}
+      />
 
   );
 }
