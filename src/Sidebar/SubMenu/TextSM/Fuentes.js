@@ -19,7 +19,6 @@ export default function Fuentes(props){
       if(props.canvas.getActiveObject().get('type')==='textbox'){
         props.canvas.getActiveObject().set({fill: cValue})
         props.canvas.renderAll()
-        //setHex(cValue);
       }
     }
   }
@@ -31,8 +30,9 @@ export default function Fuentes(props){
         disableAlpha={disableAlpha}
         onChange={(color) => {
           setHex(color.hex);
-          changeColor(hex);
+          changeColor(color.hex);
         }}
+        
       />
 
   );
