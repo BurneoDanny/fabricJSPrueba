@@ -13,9 +13,11 @@ export default function Fuentes(props){
 
   
   const changeColor = (cValue) =>{
-    if(props.canvas.getActiveObject().get('type')=='textbox'){
-    props.canvas.getActiveObject().set({fill: cValue})
-    props.canvas.renderAll()
+    if(props.canvas.getActiveObject()){
+      if(props.canvas.getActiveObject().get('type')==='textbox'){
+        props.canvas.getActiveObject().set({fill: cValue})
+        props.canvas.renderAll()
+      }
     }
 
   const changeSize = (sValue) =>{
