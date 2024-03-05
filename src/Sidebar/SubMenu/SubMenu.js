@@ -1,4 +1,5 @@
 import InitialInfo from "./InitialInfo/InitialInfo";
+import TextSM from "./TextSM/TextSM";
 
 
 export default function SubMenu(props) {
@@ -32,19 +33,8 @@ export default function SubMenu(props) {
                 </>
             }
 
-            {props.name === "texto1" &&
-                <div className="flex flex-row h-full overflow-x-auto xl:block">
-                    <h2 className="px-5 text-sm font-medium text-center text-gray-800 dark:text-white">Demas</h2>
-                    <div className="mt-8 space-x-4">
-                        <p className="whitespace-nowrap">Lorem Ipsum
-                            "Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, 
-                            adipisci velit..."
-                            usto magna,"Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, 
-                            adipisci velit..."
-                            usto magna, </p>
-
-                    </div>
-                </div>
+            {props.name === "texto" &&
+                   <TextSM canvas = {props.canvas}/>
             }
         </section>
 
