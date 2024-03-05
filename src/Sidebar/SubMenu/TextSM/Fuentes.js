@@ -4,7 +4,7 @@ import Circle from '@uiw/react-color-circle';
 
 
 export default function Fuentes(props){
-
+  const [text,setText] = useState(props.text)
 
   const [hex, setHex] = useState('#000000');
 
@@ -13,11 +13,15 @@ export default function Fuentes(props){
 
   
   const changeColor = (cValue) =>{
-    if(props.canvas.getActiveObject()){
+    if(props.canvas.getActiveObject().get('type')=='textbox'){
     props.canvas.getActiveObject().set({fill: cValue})
     props.canvas.renderAll()
-    //setFuente(cValue)
     }
+
+  const changeSize = (sValue) =>{
+
+  }
+
 }
 
   return(
