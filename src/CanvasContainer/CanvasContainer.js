@@ -7,8 +7,6 @@ export default function CanvasContainer() {
   const [canvas, setCanvas] = useState(null);
 
   useEffect(() => {
-
-
     const fabricCanvas = new fabric.Canvas('canvas', {
       width: 800,
       height: 600,
@@ -91,15 +89,13 @@ export default function CanvasContainer() {
   useEffect(()=>{
     const handleKeyDowm = (event) => {
       if (canvas){
-        console.log('Key presseada:', event.key);
+        const activeObject = canvas.getActiveObject();
+        console.log(activeObject.type);
         if (event.ctrlKey && event.key === 'c'){
-          console.log('Copying objects...');
           copyObjects();
         } else if (event.ctrlKey && event.key === 'v'){
-          console.log('Pasting objects...');
           pasteObjects();
-        } else if (event.key === 'Delete' || event.key === "Backspace"){
-          console.log('Deleting objects...');
+        } else if (activeObject.type !== 'textbox' && (event.key === 'Delete' || event.key === "Backspace")){
           deleteObjects();
         }
       }
@@ -151,11 +147,12 @@ export default function CanvasContainer() {
   const deleteObjects = () => {
     if (canvas) {
       const activeObject = canvas.getActiveObject();
-      if (activeObject){
+      if (activeObject &&  activeObject.type === 'activeSelection'){
         activeObject.forEachObject((obj) => {
           canvas.remove(obj);
         });
       }
+      canvas.remove(activeObject);
       canvas.discardActiveObject();
       canvas.requestRenderAll();
     }
@@ -189,7 +186,7 @@ export default function CanvasContainer() {
 
   return (
     <div>
-      <SideBar onImageUpload={handleImageUpload} generateDownload={generateDownload} canvas = {canvas}/>
+      <SideBar onImageUpload={handleImageUpload} generateDownload={generateDownload} canvas={canvas} />
       <FabricJS canvas={canvas} />
     </div>
   );

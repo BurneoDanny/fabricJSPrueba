@@ -40,8 +40,6 @@ export default function TextSM (props){
     }
 
 
-
-
     return(
             <div class='flex-row items-top justify-center min-h-auto space-y-5'>
                 <button class="px-5 md:px-4 py-1 md:py-2 bg-sky-600 border border-sky-600 text-white rounded-lg hover:bg-sky-700"
