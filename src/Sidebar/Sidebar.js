@@ -42,7 +42,7 @@ export default function SideBar(props) {
         <SideItem name="Demas" svg={<QuestionMarkSVG />} toogle={() => toggleSubMenu("demas")} />
         <div className="hidden md:block xl:hidden border-r-2 mx-2 "></div>
         <hr className="hidden xl:block border-2 mt-10 mx-2" />
-        <SideItem name="mobile testing" svg={<QuestionMarkSVG />} toogle={() => toggleSubMenu("texto1")} />
+        <SideItem name="Texto" svg={<QuestionMarkSVG />} toogle={() => toggleSubMenu("texto")} />
         <input
           type="file"
           id="imageUploadInput"
@@ -62,7 +62,7 @@ export default function SideBar(props) {
           <span className="hidden xl:block mx-2 text-xs font-medium text-center">Exportar</span>
         </button>
       </nav>
-      <SubMenu flag={isSubMenuOpen} name={menuName} />
+      <SubMenu flag={isSubMenuOpen} name={menuName} canvas = {props.canvas} />
     </aside>
 
 

@@ -189,7 +189,7 @@ export default function CanvasContainer() {
 
   return (
     <div>
-      <SideBar onImageUpload={handleImageUpload} generateDownload={generateDownload} />
+      <SideBar onImageUpload={handleImageUpload} generateDownload={generateDownload} canvas = {canvas}/>
       <FabricJS canvas={canvas} />
     </div>
   );
