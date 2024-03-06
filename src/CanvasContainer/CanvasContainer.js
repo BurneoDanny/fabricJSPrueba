@@ -7,15 +7,73 @@ export default function CanvasContainer() {
   const [canvas, setCanvas] = useState(null);
 
   useEffect(() => {
+    const container = document.getElementById('container');
+
     const fabricCanvas = new fabric.Canvas('canvas', {
-      width: 800,
-      height: 600,
-      backgroundColor: '#aaa',
+      width: container.offsetWidth,
+      height: container.offsetHeight,
+      backgroundColor: '#ccc',
       selection: true,
       lockScalingFlip: true,
     });
 
+    const clip = new fabric.Rect({
+      width: 800,
+      height: 600,
+      fill: '#fff', 
+      left: fabricCanvas.width / 2 - 800 / 2,
+      top: fabricCanvas.height / 2 - 600 / 2,
+      selectable: false,
+      stroke: '#000', 
+      strokeWidth: 2,
+    });
 
+    fabricCanvas.add(clip);
+
+
+    let isAdjusting = false; // Variable para controlar si ya se está ajustando la posición
+
+    fabricCanvas.on('after:render', function (event) {
+      if (!isAdjusting) {
+        isAdjusting = true;
+    
+        fabricCanvas.forEachObject(function (obj) {
+          // Verificar si el objeto está fuera de los límites del clip
+          if (
+            obj.left < clip.left ||
+            obj.top < clip.top ||
+            obj.left + obj.width > clip.left + clip.width ||
+            obj.top + obj.height > clip.top + clip.height
+          ) {
+            // Ajustar la posición del objeto para que esté dentro de los límites del clip
+            obj.set({
+              left: Math.max(clip.left, Math.min(obj.left, clip.left + clip.width - obj.width)),
+              top: Math.max(clip.top, Math.min(obj.top, clip.top + clip.height - obj.height)),
+            });
+          }
+        });
+    
+        fabricCanvas.renderAll(); // Volver a renderizar el lienzo con los ajustes
+    
+        isAdjusting = false; // Restablecer la variable después de ajustar
+      }
+    });
+
+    
+    fabricCanvas.on('mouse:wheel', function (opt) {
+      if (opt.e.ctrlKey) {
+        var delta = opt.e.deltaY;
+        var zoom = fabricCanvas.getZoom();
+        zoom *= 0.999 ** delta;
+        if (zoom > 20) zoom = 20;
+        if (zoom < 0.5) zoom = 0.5;
+
+
+        fabricCanvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
+        opt.e.preventDefault();
+        opt.e.stopPropagation();
+      }
+    });
 
     let initialTop, initialLeft, initialScaleX, initialScaleY;
     fabricCanvas.on('mouse:down', function (event) {
@@ -91,16 +149,16 @@ export default function CanvasContainer() {
   }, []);
 
 
-  useEffect(()=>{
+  useEffect(() => {
     const handleKeyDowm = (event) => {
-      if (canvas){
+      if (canvas) {
         const activeObject = canvas.getActiveObject();
-        if(activeObject){
-          if (event.ctrlKey && event.key === 'c'){
+        if (activeObject) {
+          if (event.ctrlKey && event.key === 'c') {
             copyObjects();
-          } else if (event.ctrlKey && event.key === 'v'){
+          } else if (event.ctrlKey && event.key === 'v') {
             pasteObjects();
-          } else if (!activeObject.isEditing && (event.key === 'Delete' || event.key === "Backspace")){
+          } else if (!activeObject.isEditing && (event.key === 'Delete' || event.key === "Backspace")) {
             deleteObjects();
           }
         }
@@ -112,12 +170,12 @@ export default function CanvasContainer() {
     return () => {
       document.removeEventListener('keydown', handleKeyDowm);
     };
-  },[canvas]);
+  }, [canvas]);
 
   const copyObjects = () => {
-    if (canvas){
+    if (canvas) {
       const activeObject = canvas.getActiveObject();
-      if (activeObject){
+      if (activeObject) {
         canvas.getActiveObject().clone((cloned) => {
           canvas.set('clipboard', cloned);
         });
@@ -152,7 +210,7 @@ export default function CanvasContainer() {
   const deleteObjects = () => {
     if (canvas) {
       const activeObject = canvas.getActiveObject();
-      if (activeObject &&  activeObject.type === 'activeSelection'){
+      if (activeObject && activeObject.type === 'activeSelection') {
         activeObject.forEachObject((obj) => {
           canvas.remove(obj);
         });

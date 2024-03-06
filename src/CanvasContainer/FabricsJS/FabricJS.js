@@ -5,9 +5,9 @@ export default function FabricJS() {
 
 
   return (
-    <div className="bg-slate-100 h-[calc(100vh-55px)] flex justify-center items-center">
-      <canvas id="canvas" className="border w-full h-full" />
-    </div>
+    <div className="bg-green-300 h-[calc(100vh-55px)] flex justify-center items-center" id="container">
+      <canvas id="canvas" className="border"></canvas>
 
+    </div>
   );
 }
