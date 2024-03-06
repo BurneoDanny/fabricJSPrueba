@@ -3,7 +3,6 @@ import Sketch from '@uiw/react-color-sketch';
 
 
 
-
 export default function Fuentes(props){
   const [text,setText] = useState(props.text)
 
@@ -11,9 +10,6 @@ export default function Fuentes(props){
   const [disableAlpha, setDisableAlpha] = useState(false);
 
 
-
-
-  
   const changeColor = (cValue) =>{
     if(props.canvas.getActiveObject()){
       if(props.canvas.getActiveObject().get('type')==='textbox'){
