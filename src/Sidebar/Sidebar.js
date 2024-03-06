@@ -44,6 +44,7 @@ export default function SideBar(props) {
         <hr className="hidden xl:block border-2 mt-10 mx-2" />
         <SideItem name="Texto" svg={<QuestionMarkSVG />} toogle={() => toggleSubMenu("texto")} />
         <input
+        className="w-5 h-5"
           type="file"
           id="imageUploadInput"
           accept="image/*"

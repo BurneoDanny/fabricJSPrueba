@@ -10,9 +10,24 @@ export default function CanvasContainer() {
     const fabricCanvas = new fabric.Canvas('canvas', {
       width: 800,
       height: 600,
+      backgroundColor: '#fff',
       selection: true,
       lockScalingFlip: true,
     });
+
+    fabricCanvas.on('mouse:wheel', function(opt) {
+      if (opt.e.ctrlKey) {
+        var delta = opt.e.deltaY;
+        var zoom = fabricCanvas.getZoom();
+        zoom *= 0.999 ** delta;
+        if (zoom > 20) zoom = 20;
+        if (zoom < 0.01) zoom = 0.01;
+        fabricCanvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
+        opt.e.preventDefault();
+        opt.e.stopPropagation();
+      }
+    });
+    
 
 
     let initialTop, initialLeft, initialScaleX, initialScaleY;
@@ -68,7 +83,6 @@ export default function CanvasContainer() {
     });
 
 
-
     var rect = new fabric.Rect({ fill: "red", width: 100, height: 100 });
     var rect2 = new fabric.Rect({ fill: "blue", width: 100, height: 100 });
     fabricCanvas.add(rect);
@@ -85,18 +99,19 @@ export default function CanvasContainer() {
     };
   }, []);
 
-  //Copiar, pegar y elimar objeto
+
   useEffect(()=>{
     const handleKeyDowm = (event) => {
       if (canvas){
         const activeObject = canvas.getActiveObject();
-        console.log(activeObject.type);
-        if (event.ctrlKey && event.key === 'c'){
-          copyObjects();
-        } else if (event.ctrlKey && event.key === 'v'){
-          pasteObjects();
-        } else if (activeObject.type !== 'textbox' && (event.key === 'Delete' || event.key === "Backspace")){
-          deleteObjects();
+        if(activeObject){
+          if (event.ctrlKey && event.key === 'c'){
+            copyObjects();
+          } else if (event.ctrlKey && event.key === 'v'){
+            pasteObjects();
+          } else if (!activeObject.isEditing && (event.key === 'Delete' || event.key === "Backspace")){
+            deleteObjects();
+          }
         }
       }
     };
@@ -112,7 +127,6 @@ export default function CanvasContainer() {
     if (canvas){
       const activeObject = canvas.getActiveObject();
       if (activeObject){
-        console.log('Active object:', activeObject);
         canvas.getActiveObject().clone((cloned) => {
           canvas.set('clipboard', cloned);
         });
@@ -187,7 +201,7 @@ export default function CanvasContainer() {
   return (
     <div>
       <SideBar onImageUpload={handleImageUpload} generateDownload={generateDownload} canvas={canvas} />
-      <FabricJS canvas={canvas} />
+      <FabricJS />
     </div>
   );
 }
