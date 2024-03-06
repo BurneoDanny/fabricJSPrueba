@@ -10,24 +10,11 @@ export default function CanvasContainer() {
     const fabricCanvas = new fabric.Canvas('canvas', {
       width: 800,
       height: 600,
-      backgroundColor: '#fff',
+      backgroundColor: '#aaa',
       selection: true,
       lockScalingFlip: true,
     });
 
-    fabricCanvas.on('mouse:wheel', function(opt) {
-      if (opt.e.ctrlKey) {
-        var delta = opt.e.deltaY;
-        var zoom = fabricCanvas.getZoom();
-        zoom *= 0.999 ** delta;
-        if (zoom > 20) zoom = 20;
-        if (zoom < 0.01) zoom = 0.01;
-        fabricCanvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
-        opt.e.preventDefault();
-        opt.e.stopPropagation();
-      }
-    });
-    
 
 
     let initialTop, initialLeft, initialScaleX, initialScaleY;
@@ -82,7 +69,10 @@ export default function CanvasContainer() {
       }
     });
 
-
+    //const rectB = new fabric.Rect({ fill: 'white', width: 600, height: 400, selectable: false, hoverCursor:'arrow'});
+    //fabricCanvas.add(rectB);
+    //fabricCanvas.centerObject(rectB);
+    //fabricCanvas.sendToBack(rectB);
     var rect = new fabric.Rect({ fill: "red", width: 100, height: 100 });
     var rect2 = new fabric.Rect({ fill: "blue", width: 100, height: 100 });
     fabricCanvas.add(rect);
@@ -91,6 +81,7 @@ export default function CanvasContainer() {
     setCanvas(fabricCanvas);
 
     return () => {
+      fabricCanvas.off('mouse:wheel')
       fabricCanvas.off('mouse:down');
       fabricCanvas.off('object:scaling');
       fabricCanvas.off('object:modified');
@@ -197,7 +188,84 @@ export default function CanvasContainer() {
       document.body.removeChild(link);
     }
   };
+  
+    if(canvas){
 
+          //----------zoom controls-------------
+          canvas.on('mouse:wheel', function(opt) {
+            if (opt.e.ctrlKey) {
+              let delta = opt.e.deltaY;
+              let zoom = canvas.getZoom();
+              let center = canvas.getCenter();
+              zoom *= 0.999 ** delta;
+              if (zoom > 5) zoom = 5;
+              if (zoom < 0.5) zoom = 0.5;
+              if(zoom >0.5 && zoom<=1) {canvas.zoomToPoint({ x: center.left, y:  center.top }, zoom)
+              }else{canvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom)}
+              opt.e.preventDefault();
+              opt.e.stopPropagation();
+              let vpt = this.viewportTransform;
+              console.log(canvas.getWidth() * zoom);
+              console.log(vpt[4])
+                if (vpt[4] >= 0) {
+                  vpt[4] = 0;
+                } else if (vpt[4] < canvas.getWidth() - (canvas.getWidth() * zoom)) {
+                  vpt[4] = canvas.getWidth() - (canvas.getWidth() * zoom);
+                }
+                if (vpt[5] >= 0) {
+                  vpt[5] = 0;
+                } else if (vpt[5] < canvas.getHeight() - (canvas.getHeight() * zoom)) {
+                  vpt[5] = canvas.getHeight() - (canvas.getHeight() * zoom);
+                }
+              }
+          });
+
+
+          
+          //-----------------------------------
+          //-----------Dragging controls-------
+          canvas.on('mouse:down', function(opt) {
+            var evt = opt.e;
+            if (evt.altKey === true) {
+              this.isDragging = true;
+              this.selection = false;
+              this.lastPosX = evt.clientX;
+              this.lastPosY = evt.clientY;
+            }
+          });
+          canvas.on('mouse:move', function(opt) {
+            if (this.isDragging) {
+              var e = opt.e;
+              var vpt = this.viewportTransform;
+              vpt[4] += e.clientX - this.lastPosX;
+              vpt[5] += e.clientY - this.lastPosY;
+              if (vpt[4] >= 0) {
+                vpt[4] = 0;
+              } else if (vpt[4] < canvas.getWidth() - (canvas.getWidth() * canvas.getZoom())) {
+                vpt[4] = canvas.getWidth() - (canvas.getWidth() * canvas.getZoom());
+              }
+              if (vpt[5] >= 0) {
+                vpt[5] = 0;
+              } else if (vpt[5] < canvas.getHeight() - (canvas.getHeight() * canvas.getZoom())) {
+                vpt[5] = canvas.getHeight() - (canvas.getHeight() * canvas.getZoom());
+              }
+              this.requestRenderAll();
+              this.lastPosX = e.clientX;
+              this.lastPosY = e.clientY;
+            }
+          });
+          canvas.on('mouse:up', function(opt) {
+            // on mouse up we want to recalculate new interaction
+            // for all objects, so we call setViewportTransform
+            this.setViewportTransform(this.viewportTransform);
+            this.isDragging = false;
+            this.selection = true;
+          });
+    //-----------------------------------
+    
+
+    
+    }
   return (
     <div>
       <SideBar onImageUpload={handleImageUpload} generateDownload={generateDownload} canvas={canvas} />
