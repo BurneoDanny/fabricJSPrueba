@@ -7,6 +7,8 @@ export default function CanvasContainer() {
   const [canvas, setCanvas] = useState(null);
 
   useEffect(() => {
+
+
     const fabricCanvas = new fabric.Canvas('canvas', {
       width: 800,
       height: 600,
@@ -26,69 +28,48 @@ export default function CanvasContainer() {
       }
     });
 
-    // fabricCanvas.on('selection:created', function(event){
-    //   const obj = fabricCanvas.getActiveObject();
-    //   if (obj) {
-    //     if (obj.type === 'activeSelection') {
-    //       const center = obj.getCenterPoint();
-    //       console.log("top - left" , obj.top, obj.left)
-    //       console.log("centerY - centerX", center.y, center.x)
-    //       obj._objects.forEach(innerObj => {
-    //         innerObj.top = (innerObj.top + center.y) * obj.scaleY;
-    //         innerObj.left = (innerObj.left + center.x) * obj.scaleX;
-    //         innerObj.scaleX = innerObj.scaleX * obj.scaleX;
-    //         innerObj.scaleY = innerObj.scaleY * obj.scaleY;
-    //         console.log("innertop - innerleft" , innerObj.top, innerObj.left , innerObj)
-    //       });
-    //     }
-    //   }
-    // })
-
     fabricCanvas.on('object:scaling', function (e) {
       const obj = e.target;
       obj.lockScalingFlip = true;
 
     });
 
-
-    fabricCanvas.on('before:selection:cleared',function(e){
-      const modifiedObject = e.target;
-      if (modifiedObject._objects && modifiedObject.type === 'activeSelection' && modifiedObject.isOnScreen()) {
-        const group = modifiedObject;
-        const center = group.getCenterPoint();
-        group._objects.forEach(function (innerObj) {
-
-          innerObj.top = (innerObj.top + center.y) * group.scaleY;
-          innerObj.left = (innerObj.left + center.x) * group.scaleX;
-          innerObj.scaleX = innerObj.scaleX * group.scaleX;
-          innerObj.scaleY = innerObj.scaleY * group.scaleY;
-
-          console.log("inner", innerObj.left, innerObj.top, innerObj.scaleX, innerObj.scaleY);
-          if (!innerObj.isOnScreen()) {
-            console.log("A group object is outside the screen!!");
-          }
-          
-        });
-      } 
-    })
-
     fabricCanvas.on('object:modified', function (e) {
-      const modifiedObject = e.target;
-      console.log("modified")
-      if (modifiedObject) {
-          if (!modifiedObject.isOnScreen()) {
-            console.log("objeto fuera")
-            modifiedObject.set({
-              left: initialLeft,
-              top: initialTop,
-              scaleX: initialScaleX,
-              scaleY: initialScaleY,
-            });
-            modifiedObject.setCoords();
-            fabricCanvas.requestRenderAll();
-          }
-        }
-      });
+      const obj = e.target;
+      if (obj && !obj.isOnScreen()) {
+        console.log("OBJETO COMPLETO AFUERA")
+        obj.set({
+          left: initialLeft,
+          top: initialTop,
+          scaleX: initialScaleX,
+          scaleY: initialScaleY,
+        });
+        obj.setCoords();
+        fabricCanvas.requestRenderAll();
+      }
+    });
+
+    fabricCanvas.on('before:selection:cleared', function (e) {
+      const obj = e.target;
+      if (obj && obj.type === 'activeSelection') {
+        const canvasWidth = fabricCanvas.width;
+        const canvasHeight = fabricCanvas.height;
+
+        const leftBoundary = 0;
+        const topBoundary = 0;
+        const rightBoundary = canvasWidth - obj.width * obj.scaleX;
+        const bottomBoundary = canvasHeight - obj.height * obj.scaleY;
+
+        obj.set({
+          left: Math.max(leftBoundary, Math.min(obj.left, rightBoundary)),
+          top: Math.max(topBoundary, Math.min(obj.top, bottomBoundary))
+        });
+
+        fabricCanvas.renderAll();
+      }
+    });
+
+
 
     var rect = new fabric.Rect({ fill: "red", width: 100, height: 100 });
     var rect2 = new fabric.Rect({ fill: "blue", width: 100, height: 100 });
