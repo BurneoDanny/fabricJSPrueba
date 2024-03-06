@@ -87,6 +87,80 @@ export default function CanvasContainer() {
     };
   }, []);
 
+  //Copiar, pegar y elimar objeto
+  useEffect(()=>{
+    const handleKeyDowm = (event) => {
+      if (canvas){
+        console.log('Key presseada:', event.key);
+        if (event.ctrlKey && event.key === 'c'){
+          console.log('Copying objects...');
+          copyObjects();
+        } else if (event.ctrlKey && event.key === 'v'){
+          console.log('Pasting objects...');
+          pasteObjects();
+        } else if (event.key === 'Delete' || event.key === "Backspace"){
+          console.log('Deleting objects...');
+          deleteObjects();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDowm);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDowm);
+    };
+  },[canvas]);
+
+  const copyObjects = () => {
+    if (canvas){
+      const activeObject = canvas.getActiveObject();
+      if (activeObject){
+        console.log('Active object:', activeObject);
+        canvas.getActiveObject().clone((cloned) => {
+          canvas.set('clipboard', cloned);
+        });
+      }
+    }
+  };
+
+  const pasteObjects = () => {
+    if (canvas) {
+      canvas.get('clipboard').clone((clonedObj) => {
+        canvas.discardActiveObject();
+        clonedObj.set({
+          left: clonedObj.left + 10,
+          top: clonedObj.top + 10,
+          evented: true,
+        });
+        if (clonedObj.type === 'activeSelection') {
+          clonedObj.canvas = canvas;
+          clonedObj.forEachObject((obj) => {
+            canvas.add(obj);
+          });
+          clonedObj.setCoords();
+        } else {
+          canvas.add(clonedObj);
+        }
+        canvas.setActiveObject(clonedObj);
+        canvas.requestRenderAll();
+      })
+    }
+  };
+
+  const deleteObjects = () => {
+    if (canvas) {
+      const activeObject = canvas.getActiveObject();
+      if (activeObject){
+        activeObject.forEachObject((obj) => {
+          canvas.remove(obj);
+        });
+      }
+      canvas.discardActiveObject();
+      canvas.requestRenderAll();
+    }
+  };
+
   const handleImageUpload = (imageUrl) => {
     if (canvas) {
       fabric.Image.fromURL(imageUrl, (img) => {
