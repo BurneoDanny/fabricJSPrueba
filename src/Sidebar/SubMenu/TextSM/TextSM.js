@@ -30,7 +30,9 @@ export default function TextSM (props){
             top: 10,
             fontSize: 20,
             width: 300,
-            selectable: false   
+            selectable: false,
+            hoverCursor:"arrow"  
+
         });
         props.canvas.add(statement)
         setStatement(statement);
