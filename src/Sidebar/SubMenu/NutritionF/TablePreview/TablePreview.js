@@ -2,6 +2,7 @@ import React from 'react';
 import { fabric } from 'fabric';
 import './TablePreview.css'
 import { toPng } from "html-to-image";
+import { toSvg } from 'html-to-image';
 import { useRef } from 'react';
 
 export default function TablePreview(props) {
@@ -22,11 +23,14 @@ export default function TablePreview(props) {
     //     });
     // };
 
+    function filter (node) {
+        return (node.tagName !== 'i');
+      }
 
     const addTableNutricional = () => {
         //var rect = new fabric.Rect({ fill: "red", width: 100, height: 100 });
        // props.canvas.add(rect)
-        toPng(elementRef.current, { cacheBust: false })
+        toSvg(elementRef.current, { filter: filter })
           .then((dataUrl) => {
             fabric.Image.fromURL(dataUrl,function(img){
                 img.scaleToHeight(100)
