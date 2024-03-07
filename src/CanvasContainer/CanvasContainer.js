@@ -35,7 +35,6 @@ export default function CanvasContainer() {
         var newWidth = currentWidth * zoom;
         var newHeight = currentHeight * zoom;
 
-
         // Cambiar el tamaño del canvas
         fabricCanvas.setDimensions({
           width: newWidth,
@@ -43,20 +42,15 @@ export default function CanvasContainer() {
         });
 
         fabricCanvas.forEachObject(function (obj) {
+          console.log(obj.left, obj.top, obj.scaleX, obj.scaleY);
           obj.scaleX *= zoom;
           obj.scaleY *= zoom;
           obj.setCoords();
+          console.log(obj.left, obj.top, obj.scaleX, obj.scaleY);
         });
-
-        
-
+    
         // Aplicar el zoom al punto especificado
         //fabricCanvas.zoomToPoint({ x: opt.offsetX, y: opt.offsetY }, zoom);
-
-        // Ajustar la escala del contenedor
-        //console.log(zoom);
-        //container.style.transform = `scale(${zoom})`;
-
         opt.preventDefault();
         opt.stopPropagation();
       }
