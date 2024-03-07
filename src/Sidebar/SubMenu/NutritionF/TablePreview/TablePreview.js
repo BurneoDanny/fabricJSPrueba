@@ -32,9 +32,8 @@ export default function TablePreview(props) {
        // props.canvas.add(rect)
         toSvg(elementRef.current, { filter: filter })
           .then((dataUrl) => {
+            console.log(dataUrl);
             fabric.Image.fromURL(dataUrl,function(img){
-                img.scaleToHeight(100)
-                img.scaleToWidth(160)
                 props.canvas.add(img).setActiveObject(img)
                 props.canvas.centerObject(img)
                 console.log('entra')
@@ -58,8 +57,8 @@ export default function TablePreview(props) {
             <div className='flex flex-col gap-y-3 items-center justify-center'  >
                 <h1>Este es un ejemplo de como va a quedar la tabla nutricional de tu producto</h1>
 
-
-                <section id="tabla" className="performance-facts" ref={elementRef}>
+            <div ref={elementRef}>
+                <section id="tabla" className="performance-facts" >
                     <header className="performance-facts__header">
                         <h1 className="performance-facts__title">Nutrition Facts</h1>
                         <p>Serving Size 1/2 cup (about 82g)</p>
@@ -260,6 +259,7 @@ export default function TablePreview(props) {
                         Protein 4
                     </p>
                 </section>
+                </div>
 
 
 
