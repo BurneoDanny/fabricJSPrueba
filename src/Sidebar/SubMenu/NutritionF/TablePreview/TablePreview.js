@@ -1,7 +1,6 @@
 import React from 'react';
 import { fabric } from 'fabric';
 import './TablePreview.css'
-import { toPng } from "html-to-image";
 import { toSvg } from 'html-to-image';
 import { useRef } from 'react';
 
@@ -9,27 +8,11 @@ export default function TablePreview(props) {
 
     const elementRef = useRef(null);
 
-    // const addTableNutricional = () => {
-    //     // Aquí debes crear un objeto de imagen fabric usando la URL de la imagen
-    //     let tableNutricionalImage = new fabric.Image.fromURL(props.img, (img) => {
-    //         img.set({
-
-    //             width: 300,
-    //             // Otras propiedades de estilo y diseño aquí
-    //         });
-
-    //         // Agregar la imagen al canvas y establecerla como objeto activo
-    //         props.canvas.add(img).setActiveObject(img);
-    //     });
-    // };
-
     function filter (node) {
         return (node.tagName !== 'i');
       }
 
     const addTableNutricional = () => {
-        //var rect = new fabric.Rect({ fill: "red", width: 100, height: 100 });
-       // props.canvas.add(rect)
         toSvg(elementRef.current, { filter: filter })
           .then((dataUrl) => {
             console.log(dataUrl);
