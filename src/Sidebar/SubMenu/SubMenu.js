@@ -1,5 +1,6 @@
 import InitialInfo from "./InitialInfo/InitialInfo";
 import TextSM from "./TextSM/TextSM";
+import NutritionF from "./NutritionF/NutritionF"
 
 
 export default function SubMenu(props) {
@@ -36,6 +37,11 @@ export default function SubMenu(props) {
             {props.name === "texto" &&
                    <TextSM canvas = {props.canvas}/>
             }
+
+            {props.name === "NutritionF" &&
+                    <NutritionF canvas = {props.canvas}/>
+            }
+            
         </section>
 
 

@@ -62,6 +62,7 @@ export default function SideBar(props) {
           </div>
           <span className="hidden xl:block mx-2 text-xs font-medium text-center">Exportar</span>
         </button>
+        <SideItem name="NutritionF" svg={<QuestionMarkSVG />} toogle={() => toggleSubMenu("NutritionF")} />
       </nav>
       <SubMenu flag={isSubMenuOpen} name={menuName} canvas = {props.canvas} />
     </aside>
