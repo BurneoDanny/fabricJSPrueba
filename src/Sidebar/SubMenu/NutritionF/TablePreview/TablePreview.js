@@ -31,7 +31,7 @@ export default function TablePreview(props) {
             fabric.Image.fromURL(dataUrl,function(img){
                 img.scaleToHeight(100)
                 img.scaleToWidth(160)
-                props.canvas.add(img).setActiveObject()
+                props.canvas.add(img).setActiveObject(img)
                 props.canvas.centerObject(img)
                 console.log('entra')
             });
