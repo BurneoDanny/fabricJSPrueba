@@ -5,79 +5,69 @@ import FabricJS from './FabricsJS/FabricJS';
 
 export default function CanvasContainer() {
   const [canvas, setCanvas] = useState(null);
+  let fabricCanvas; 
 
   useEffect(() => {
-    const container = document.getElementById('container');
 
-    const fabricCanvas = new fabric.Canvas('canvas', {
-      width: container.offsetWidth,
-      height: container.offsetHeight,
-      backgroundColor: '#ccc',
+    fabricCanvas = new fabric.Canvas('canvas', {
+      width: 800,
+      height: 600,
+      backgroundColor: '#fff',
       selection: true,
       lockScalingFlip: true,
     });
 
-    const clip = new fabric.Rect({
-      width: 800,
-      height: 600,
-      fill: '#fff', 
-      left: fabricCanvas.width / 2 - 800 / 2,
-      top: fabricCanvas.height / 2 - 600 / 2,
-      selectable: false,
-      stroke: '#000', 
-      strokeWidth: 2,
-    });
+    const container = document.getElementById('container');
 
-    fabricCanvas.add(clip);
-
-
-    let isAdjusting = false; // Variable para controlar si ya se está ajustando la posición
-
-    fabricCanvas.on('after:render', function (event) {
-      if (!isAdjusting) {
-        isAdjusting = true;
-    
-        fabricCanvas.forEachObject(function (obj) {
-          // Verificar si el objeto está fuera de los límites del clip
-          if (
-            obj.left < clip.left ||
-            obj.top < clip.top ||
-            obj.left + obj.width > clip.left + clip.width ||
-            obj.top + obj.height > clip.top + clip.height
-          ) {
-            // Ajustar la posición del objeto para que esté dentro de los límites del clip
-            obj.set({
-              left: Math.max(clip.left, Math.min(obj.left, clip.left + clip.width - obj.width)),
-              top: Math.max(clip.top, Math.min(obj.top, clip.top + clip.height - obj.height)),
-            });
-          }
-        });
-    
-        fabricCanvas.renderAll(); // Volver a renderizar el lienzo con los ajustes
-    
-        isAdjusting = false; // Restablecer la variable después de ajustar
-      }
-    });
-
-    
-    fabricCanvas.on('mouse:wheel', function (opt) {
-      if (opt.e.ctrlKey) {
-        var delta = opt.e.deltaY;
+    container.addEventListener('wheel', function (opt) {
+      fabricCanvas.lowerCanvasEl = document.getElementById('canvas');
+      if (opt.ctrlKey && fabricCanvas.lowerCanvasEl !== undefined) {
+        console.log("pasa por aqui")
+        var delta = opt.deltaY;
         var zoom = fabricCanvas.getZoom();
         zoom *= 0.999 ** delta;
         if (zoom > 20) zoom = 20;
         if (zoom < 0.5) zoom = 0.5;
+        var currentWidth = fabricCanvas.width;
+        var currentHeight = fabricCanvas.height;
+
+        // Ajustar el tamaño del canvas junto con el zoom
+        var newWidth = currentWidth * zoom;
+        var newHeight = currentHeight * zoom;
 
 
-        fabricCanvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
-        opt.e.preventDefault();
-        opt.e.stopPropagation();
+        // Cambiar el tamaño del canvas
+        fabricCanvas.setDimensions({
+          width: newWidth,
+          height: newHeight
+        });
+
+        fabricCanvas.forEachObject(function (obj) {
+          obj.scaleX *= zoom;
+          obj.scaleY *= zoom;
+          obj.setCoords();
+        });
+
+        
+
+        // Aplicar el zoom al punto especificado
+        //fabricCanvas.zoomToPoint({ x: opt.offsetX, y: opt.offsetY }, zoom);
+
+        // Ajustar la escala del contenedor
+        //console.log(zoom);
+        //container.style.transform = `scale(${zoom})`;
+
+        opt.preventDefault();
+        opt.stopPropagation();
       }
     });
+    
+
 
     let initialTop, initialLeft, initialScaleX, initialScaleY;
-    fabricCanvas.on('mouse:down', function (event) {
-      const obj = event.target;
+    fabricCanvas.on('mouse:down', function (e) {
+      const obj = e.target;
+      console.log("pasa por aqui", obj);
       if (obj && obj.selectable) {
         initialTop = obj.top;
         initialLeft = obj.left;
@@ -139,7 +129,7 @@ export default function CanvasContainer() {
       fabricCanvas.off('mouse:down');
       fabricCanvas.off('object:scaling');
       fabricCanvas.off('object:modified');
-      fabricCanvas.off('selection:created');
+      fabricCanvas.off('before:selection:cleared');
       fabricCanvas.dispose();
     };
   }, []);
@@ -148,6 +138,7 @@ export default function CanvasContainer() {
   useEffect(() => {
     const handleKeyDowm = (event) => {
       if (canvas) {
+
         const activeObject = canvas.getActiveObject();
         if (activeObject) {
           if (event.ctrlKey && event.key === 'c') {
@@ -244,7 +235,7 @@ export default function CanvasContainer() {
   };
 
   return (
-    <div>
+    <div className='overflow-hidden ' style={{ minWidth: '100%', minHeight: '100%' }}>
       <SideBar onImageUpload={handleImageUpload} generateDownload={generateDownload} canvas={canvas} />
       <FabricJS />
     </div>
