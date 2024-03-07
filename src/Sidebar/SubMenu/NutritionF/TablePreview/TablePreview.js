@@ -1,8 +1,12 @@
 import React from 'react';
 import { fabric } from 'fabric';
 import './TablePreview.css'
+import { toPng } from "html-to-image";
+import { useRef } from 'react';
 
 export default function TablePreview(props) {
+
+    const elementRef = useRef(null);
 
     // const addTableNutricional = () => {
     //     // Aquí debes crear un objeto de imagen fabric usando la URL de la imagen
@@ -20,27 +24,21 @@ export default function TablePreview(props) {
 
 
     const addTableNutricional = () => {
-        // Declare 'tabla' as a constant and get the element by id
-        const tabla = document.getElementById('tabla');
-        console.log(tabla);
-    
-        // Check if the element exists before proceeding
-        if (tabla) {
-            // Get the outer HTML of the 'tabla' element
-            const tablaHTML = tabla.outerHTML;
-    
-            // Create a fabric.Textbox and set its content to the HTML
-            const textBox = new fabric.Textbox(tablaHTML, {
-                left: 150,
-                top: 200,
-                width: 300,
-                fontSize: 14, // Set the font size or other styles as needed
-                // Other style and design properties here
+        //var rect = new fabric.Rect({ fill: "red", width: 100, height: 100 });
+       // props.canvas.add(rect)
+        toPng(elementRef.current, { cacheBust: false })
+          .then((dataUrl) => {
+            fabric.Image.fromURL(dataUrl,function(img){
+                img.scaleToHeight(100)
+                img.scaleToWidth(160)
+                props.canvas.add(img).setActiveObject()
+                props.canvas.centerObject(img)
+                console.log('entra')
             });
-    
-            // Add the fabric.Textbox to the canvas and set it as the active object
-            props.canvas.add(textBox).setActiveObject(textBox);
-        }
+          })
+          .catch((err) => {
+            console.log(err);
+          });
     };
     
 
@@ -53,11 +51,11 @@ export default function TablePreview(props) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
             </button>
-            <div className='flex flex-col gap-y-3 items-center justify-center'>
+            <div className='flex flex-col gap-y-3 items-center justify-center'  >
                 <h1>Este es un ejemplo de como va a quedar la tabla nutricional de tu producto</h1>
 
 
-                <section id="tabla" className="performance-facts">
+                <section id="tabla" className="performance-facts" ref={elementRef}>
                     <header className="performance-facts__header">
                         <h1 className="performance-facts__title">Nutrition Facts</h1>
                         <p>Serving Size 1/2 cup (about 82g)</p>
