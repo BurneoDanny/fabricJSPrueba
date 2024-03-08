@@ -40,8 +40,8 @@ export default function TablePreview(props) {
             <div className='flex flex-col gap-y-3 items-center justify-center'  >
                 <h1>Este es un ejemplo de como va a quedar la tabla nutricional de tu producto</h1>
 
-            <div ref={elementRef}>
-                <section id="tabla" className="performance-facts" >
+            <div ref={elementRef} >
+                <section id="tabla" className="performance-facts bg-white" >
                     <header className="performance-facts__header">
                         <h1 className="performance-facts__title">Nutrition Facts</h1>
                         <p>Serving Size 1/2 cup (about 82g)</p>

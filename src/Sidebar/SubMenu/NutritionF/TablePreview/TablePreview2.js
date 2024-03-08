@@ -40,7 +40,7 @@ export default function TablePreview2(props) {
             <div className='flex flex-col gap-y-3 items-center justify-center'  >
                 <h1>Este es un ejemplo de como va a quedar la tabla nutricional de tu producto</h1>
 
-            <div ref={elementRef}>
+            <div ref={elementRef} className='bg-white'>
             <section class="nutrition-label vertical-label">
   <div class="nutrition-row">
     <div class="nutrition-column">
