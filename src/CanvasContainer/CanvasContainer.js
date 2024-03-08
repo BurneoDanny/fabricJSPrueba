@@ -5,63 +5,67 @@ import FabricJS from './FabricsJS/FabricJS';
 
 export default function CanvasContainer() {
   const [canvas, setCanvas] = useState(null);
-  let fabricCanvas; 
+
 
   useEffect(() => {
 
-    fabricCanvas = new fabric.Canvas('canvas', {
+    const fabricCanvas = new fabric.Canvas('canvas', {
       width: 800,
       height: 600,
       backgroundColor: '#fff',
       selection: true,
       lockScalingFlip: true,
+      centeredScaling: true
     });
 
-    const container = document.getElementById('container');
 
-    container.addEventListener('wheel', function (opt) {
-      fabricCanvas.lowerCanvasEl = document.getElementById('canvas');
-      if (opt.ctrlKey && fabricCanvas.lowerCanvasEl !== undefined) {
-        console.log("pasa por aqui")
-        var delta = opt.deltaY;
-        var zoom = fabricCanvas.getZoom();
-        zoom *= 0.999 ** delta;
-        if (zoom > 20) zoom = 20;
-        if (zoom < 0.5) zoom = 0.5;
-        var currentWidth = fabricCanvas.width;
-        var currentHeight = fabricCanvas.height;
+    //const container = document.getElementById('container');
 
-        // Ajustar el tamaño del canvas junto con el zoom
-        var newWidth = currentWidth * zoom;
-        var newHeight = currentHeight * zoom;
 
-        // Cambiar el tamaño del canvas
-        fabricCanvas.setDimensions({
-          width: newWidth,
-          height: newHeight
-        });
 
-        fabricCanvas.forEachObject(function (obj) {
-          console.log(obj.left, obj.top, obj.scaleX, obj.scaleY);
-          obj.scaleX *= zoom;
-          obj.scaleY *= zoom;
-          obj.setCoords();
-          console.log(obj.left, obj.top, obj.scaleX, obj.scaleY);
-        });
-    
-        // Aplicar el zoom al punto especificado
-        //fabricCanvas.zoomToPoint({ x: opt.offsetX, y: opt.offsetY }, zoom);
-        opt.preventDefault();
-        opt.stopPropagation();
-      }
-    });
-    
+    // fabricCanvas.on('mouse:wheel', function(opt) {
+    //    var delta = opt.e.deltaY;
+    //    var zoom = fabricCanvas.getZoom();
+    //    zoom *= 0.999 ** delta;
+    //    if (zoom > 15) zoom = 15;
+    //    if (zoom < 0.5) zoom = 0.5;
+    //   console.log(zoom);
+
+    //   fabricCanvas.setZoom(zoom); // con esto el zoom cambiara siempre
+
+    //   const contWith = container.offsetWidth //1920
+    //   const contHeight = container.offsetHeight //1080
+
+    //   const canvasWidth = fabricCanvas.width; //800
+    //   const canvasHeight = fabricCanvas.height; //600
+
+    //   const scaleX = contWith / canvasWidth;   // 1920/800 = 2.4
+    //   const scaleY = contHeight / canvasHeight; // 1080 / 600  = 1.8
+
+    //   fabricCanvas.forEachObject(function(obj){
+    //     obj.set({
+    //       left: obj.left * scaleX,
+    //       top: obj.top * scaleY,
+    //       scaleX: obj.scaleX * zoom,
+    //       scaleY: obj.scaleY * zoom
+    //     })
+    //     obj.setCoords();
+    //   });
+
+    //   fabricCanvas.discardActiveObject(); // optional
+    //   fabricCanvas.setWidth(canvasWidth * scaleX);
+    //   fabricCanvas.setHeight(canvasHeight * scaleY);
+    //   fabricCanvas.renderAll();
+    //   fabricCanvas.calcOffset(); // no clue
+
+    //    opt.e.preventDefault();
+    //    opt.e.stopPropagation();
+    //  });
 
 
     let initialTop, initialLeft, initialScaleX, initialScaleY;
     fabricCanvas.on('mouse:down', function (e) {
       const obj = e.target;
-      console.log("pasa por aqui", obj);
       if (obj && obj.selectable) {
         initialTop = obj.top;
         initialLeft = obj.left;
@@ -79,7 +83,6 @@ export default function CanvasContainer() {
     fabricCanvas.on('object:modified', function (e) {
       const obj = e.target;
       if (obj && !obj.isOnScreen()) {
-        console.log("OBJETO COMPLETO AFUERA")
         obj.set({
           left: initialLeft,
           top: initialTop,
@@ -96,21 +99,19 @@ export default function CanvasContainer() {
       if (obj && obj.type === 'activeSelection') {
         const canvasWidth = fabricCanvas.width;
         const canvasHeight = fabricCanvas.height;
-
         const leftBoundary = 0;
         const topBoundary = 0;
         const rightBoundary = canvasWidth - obj.width * obj.scaleX;
         const bottomBoundary = canvasHeight - obj.height * obj.scaleY;
-
         obj.set({
           left: Math.max(leftBoundary, Math.min(obj.left, rightBoundary)),
           top: Math.max(topBoundary, Math.min(obj.top, bottomBoundary))
         });
 
+
         fabricCanvas.renderAll();
       }
     });
-
 
     var rect = new fabric.Rect({ fill: "red", width: 100, height: 100 });
     var rect2 = new fabric.Rect({ fill: "blue", width: 100, height: 100 });
@@ -124,9 +125,108 @@ export default function CanvasContainer() {
       fabricCanvas.off('object:scaling');
       fabricCanvas.off('object:modified');
       fabricCanvas.off('before:selection:cleared');
+      //fabricCanvas.off('mouse:wheel');
       fabricCanvas.dispose();
     };
   }, []);
+
+  useEffect(() => {
+    let previousZoom = 0;
+    if (canvas) {
+      const container = document.getElementById('container');
+      container.addEventListener('wheel', function (opt) {
+        canvas.lowerCanvasEl = document.getElementById('canvas');
+        if (opt.ctrlKey && canvas.lowerCanvasEl !== undefined) {
+          var delta = opt.deltaY;
+          var zoom = canvas.getZoom();
+          zoom *= 0.999 ** delta;
+          if (zoom > 20) zoom = 20;
+          if (zoom < 0.5) zoom = 0.5;
+          canvas.setZoom(zoom / zoom);
+
+          const contWith = container.offsetWidth
+          const contHeight = container.offsetHeight
+
+          var canvasWidth = canvas.width;
+          var canvasHeight = canvas.height;
+
+          if (canvasHeight >= contHeight || canvasWidth >= contWith) {
+            if ((canvasWidth >= 100 && canvasWidth <= 2000) || (zoom != previousZoom)) {
+
+              // Obtener la posición del mouse dentro del contenedor
+              const mouseX = opt.clientX - container.offsetLeft;
+              const mouseY = opt.clientY - container.offsetTop;
+
+
+              // Calcular la nueva posición del canvas para mantener el punto del mouse en el mismo lugar después del zoom
+              const newLeft = (canvasWidth - contWith) * (mouseX / contWith);
+              const newTop = (canvasHeight - contHeight) * (mouseY / contHeight);
+
+              console.log(newLeft, newTop);
+
+              canvas.set({
+                left: 1000,
+                top: 1000
+              });
+
+              console.log(canvas.get)
+
+              canvas.forEachObject(function (obj) {
+                obj.set({
+                  left: obj.left * zoom,
+                  top: obj.top * zoom,
+                  scaleX: obj.scaleX * zoom,
+                  scaleY: obj.scaleY * zoom
+                })
+                obj.setCoords();
+              });
+
+              canvas.discardActiveObject(); // optional
+              canvas.setDimensions({
+                width: canvasWidth * zoom,
+                height: canvasHeight * zoom
+              });
+              previousZoom = zoom;
+              canvas.renderAll();
+              canvas.calcOffset(); // no clue
+            }
+
+            opt.preventDefault();
+            opt.stopPropagation();
+
+          }
+          else {
+            if ((canvasWidth >= 100 && canvasWidth <= 2000) || (zoom != previousZoom)) {
+              canvas.forEachObject(function (obj) {
+                obj.set({
+                  left: obj.left * zoom,
+                  top: obj.top * zoom,
+                  scaleX: obj.scaleX * zoom,
+                  scaleY: obj.scaleY * zoom
+                })
+                obj.setCoords();
+              });
+
+              canvas.discardActiveObject(); // optional
+              canvas.setDimensions({
+                width: canvasWidth * zoom,
+                height: canvasHeight * zoom
+              });
+              previousZoom = zoom;
+              canvas.renderAll();
+              canvas.calcOffset(); // no clue
+            }
+
+            opt.preventDefault();
+            opt.stopPropagation();
+          }
+
+        }
+      });
+
+
+    }
+  }, [canvas]);
 
 
   useEffect(() => {
@@ -229,7 +329,7 @@ export default function CanvasContainer() {
   };
 
   return (
-    <div className='overflow-hidden ' style={{ minWidth: '100%', minHeight: '100%' }}>
+    <div className='overflow-hidden bg-green-300' style={{ minWidth: '100%', minHeight: '100%' }}>
       <SideBar onImageUpload={handleImageUpload} generateDownload={generateDownload} canvas={canvas} />
       <FabricJS />
     </div>
