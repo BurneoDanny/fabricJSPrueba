@@ -1,46 +1,30 @@
 import React from 'react';
 import { fabric } from 'fabric';
 import './TablePreview.css'
+import { toSvg } from 'html-to-image';
+import { useRef } from 'react';
 
 export default function TablePreview(props) {
 
-    // const addTableNutricional = () => {
-    //     // Aquí debes crear un objeto de imagen fabric usando la URL de la imagen
-    //     let tableNutricionalImage = new fabric.Image.fromURL(props.img, (img) => {
-    //         img.set({
+    const elementRef = useRef(null);
 
-    //             width: 300,
-    //             // Otras propiedades de estilo y diseño aquí
-    //         });
-
-    //         // Agregar la imagen al canvas y establecerla como objeto activo
-    //         props.canvas.add(img).setActiveObject(img);
-    //     });
-    // };
-
+    function filter (node) {
+        return (node.tagName !== 'i');
+      }
 
     const addTableNutricional = () => {
-        // Declare 'tabla' as a constant and get the element by id
-        const tabla = document.getElementById('tabla');
-        console.log(tabla);
-    
-        // Check if the element exists before proceeding
-        if (tabla) {
-            // Get the outer HTML of the 'tabla' element
-            const tablaHTML = tabla.outerHTML;
-    
-            // Create a fabric.Textbox and set its content to the HTML
-            const textBox = new fabric.Textbox(tablaHTML, {
-                left: 150,
-                top: 200,
-                width: 300,
-                fontSize: 14, // Set the font size or other styles as needed
-                // Other style and design properties here
+        toSvg(elementRef.current, { filter: filter })
+          .then((dataUrl) => {
+            console.log(dataUrl);
+            fabric.Image.fromURL(dataUrl,function(img){
+                props.canvas.add(img).setActiveObject(img)
+                props.canvas.centerObject(img)
+                console.log('entra')
             });
-    
-            // Add the fabric.Textbox to the canvas and set it as the active object
-            props.canvas.add(textBox).setActiveObject(textBox);
-        }
+          })
+          .catch((err) => {
+            console.log(err);
+          });
     };
     
 
@@ -53,11 +37,11 @@ export default function TablePreview(props) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
             </button>
-            <div className='flex flex-col gap-y-3 items-center justify-center'>
+            <div className='flex flex-col gap-y-3 items-center justify-center'  >
                 <h1>Este es un ejemplo de como va a quedar la tabla nutricional de tu producto</h1>
 
-
-                <section id="tabla" className="performance-facts">
+            <div ref={elementRef}>
+                <section id="tabla" className="performance-facts" >
                     <header className="performance-facts__header">
                         <h1 className="performance-facts__title">Nutrition Facts</h1>
                         <p>Serving Size 1/2 cup (about 82g)</p>
@@ -258,6 +242,7 @@ export default function TablePreview(props) {
                         Protein 4
                     </p>
                 </section>
+                </div>
 
 
 
