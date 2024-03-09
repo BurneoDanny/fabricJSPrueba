@@ -17,50 +17,78 @@ export default function CanvasContainer() {
       lockScalingFlip: true,
       centeredScaling: true
     });
+    // const container = document.getElementById('container');
+    // let previousZoom = 0;
+    // fabricCanvas.on('mouse:wheel', function (opt) {
+    //   var delta = opt.e.deltaY;
+    //   var zoom = fabricCanvas.getZoom();
+    //   zoom *= 0.999 ** delta;
+    //   if (zoom > 20) zoom = 20;
+    //   if (zoom < 0.5) zoom = 0.5;
+
+    //   const contWith = container.offsetWidth
+    //   const contHeight = container.offsetHeight
+
+    //   var canvasWidth = fabricCanvas.width;
+    //   var canvasHeight = fabricCanvas.height;
+
+    //   if (canvasHeight >= contHeight || canvasWidth >= contWith) {
+    //     if ((canvasWidth >= 100 && canvasWidth <= 2000) || (zoom != previousZoom)) {
 
 
-    //const container = document.getElementById('container');
+    //       fabricCanvas.forEachObject(function (obj) {
+    //         obj.set({
+    //           left: obj.left * zoom,
+    //           top: obj.top * zoom,
+    //           scaleX: obj.scaleX * zoom,
+    //           scaleY: obj.scaleY * zoom
+    //         })
+    //         obj.setCoords();
+    //       });
 
+    //       fabricCanvas.discardActiveObject();
+    //       fabricCanvas.setDimensions({
+    //         width: canvasWidth * zoom,
+    //         height: canvasHeight * zoom
+    //       });
+    //       previousZoom = zoom;
+    //       fabricCanvas.renderAll();
+    //       fabricCanvas.calcOffset();
+    //     }
 
+    //     opt.preventDefault();
+    //     opt.stopPropagation();
 
-    // fabricCanvas.on('mouse:wheel', function(opt) {
-    //    var delta = opt.e.deltaY;
-    //    var zoom = fabricCanvas.getZoom();
-    //    zoom *= 0.999 ** delta;
-    //    if (zoom > 15) zoom = 15;
-    //    if (zoom < 0.5) zoom = 0.5;
-    //   console.log(zoom);
+    //   }
+    //   else {
+    //     if ((canvasWidth >= 100 && canvasWidth <= 2000) || (zoom != previousZoom)) {
+    //       fabricCanvas.setZoom(zoom / zoom);
+    //       fabricCanvas.forEachObject(function (obj) {
+    //         obj.set({
+    //           left: obj.left * zoom,
+    //           top: obj.top * zoom,
+    //           scaleX: obj.scaleX * zoom,
+    //           scaleY: obj.scaleY * zoom
+    //         })
+    //         obj.setCoords();
+    //       });
 
-    //   fabricCanvas.setZoom(zoom); // con esto el zoom cambiara siempre
+    //       fabricCanvas.discardActiveObject(); // optional
+    //       fabricCanvas.setDimensions({
+    //         width: canvasWidth * zoom,
+    //         height: canvasHeight * zoom
+    //       });
+    //       previousZoom = zoom;
+    //       fabricCanvas.renderAll();
+    //       fabricCanvas.calcOffset(); // no clue
+    //     }
 
-    //   const contWith = container.offsetWidth //1920
-    //   const contHeight = container.offsetHeight //1080
-
-    //   const canvasWidth = fabricCanvas.width; //800
-    //   const canvasHeight = fabricCanvas.height; //600
-
-    //   const scaleX = contWith / canvasWidth;   // 1920/800 = 2.4
-    //   const scaleY = contHeight / canvasHeight; // 1080 / 600  = 1.8
-
-    //   fabricCanvas.forEachObject(function(obj){
-    //     obj.set({
-    //       left: obj.left * scaleX,
-    //       top: obj.top * scaleY,
-    //       scaleX: obj.scaleX * zoom,
-    //       scaleY: obj.scaleY * zoom
-    //     })
-    //     obj.setCoords();
-    //   });
-
-    //   fabricCanvas.discardActiveObject(); // optional
-    //   fabricCanvas.setWidth(canvasWidth * scaleX);
-    //   fabricCanvas.setHeight(canvasHeight * scaleY);
-    //   fabricCanvas.renderAll();
-    //   fabricCanvas.calcOffset(); // no clue
-
-    //    opt.e.preventDefault();
-    //    opt.e.stopPropagation();
-    //  });
+    //     opt.preventDefault();
+    //     opt.stopPropagation();
+    //   }
+    //   opt.e.preventDefault();
+    //   opt.e.stopPropagation();
+    // });
 
 
     let initialTop, initialLeft, initialScaleX, initialScaleY;
@@ -113,11 +141,21 @@ export default function CanvasContainer() {
       }
     });
 
+
+
     var rect = new fabric.Rect({ fill: "red", width: 100, height: 100 });
     var rect2 = new fabric.Rect({ fill: "blue", width: 100, height: 100 });
     fabricCanvas.add(rect);
     fabricCanvas.add(rect2);
+    var limiter = new fabric.Rect({ 
+      width: 500,
+      height: 500,
+      fill: 'transparent',
+      borderColor: 'black',
+      strokeWidth: 2
+    });
 
+    fabricCanvas.add(limiter);
     setCanvas(fabricCanvas);
 
     return () => {
@@ -130,104 +168,98 @@ export default function CanvasContainer() {
     };
   }, []);
 
-  useEffect(() => {
-    let previousZoom = 0;
-    if (canvas) {
-      const container = document.getElementById('container');
-      container.addEventListener('wheel', function (opt) {
-        canvas.lowerCanvasEl = document.getElementById('canvas');
-        if (opt.ctrlKey && canvas.lowerCanvasEl !== undefined) {
-          var delta = opt.deltaY;
-          var zoom = canvas.getZoom();
-          zoom *= 0.999 ** delta;
-          if (zoom > 20) zoom = 20;
-          if (zoom < 0.5) zoom = 0.5;
-          canvas.setZoom(zoom / zoom);
+  // useEffect(() => {
+  //   let previousZoom = 0;
+  //   if (canvas) {
+  //     const container = document.getElementById('container');
+  //     container.addEventListener('wheel', function (opt) {
+  //       canvas.lowerCanvasEl = document.getElementById('canvas');
+  //       if (opt.ctrlKey && canvas.lowerCanvasEl !== undefined) {
+  //         var delta = opt.deltaY;
+  //         var zoom = canvas.getZoom();
+  //         zoom *= 0.999 ** delta;
+  //         if (zoom > 20) zoom = 20;
+  //         if (zoom < 0.5) zoom = 0.5;
 
-          const contWith = container.offsetWidth
-          const contHeight = container.offsetHeight
+  //         const contWith = container.offsetWidth
+  //         const contHeight = container.offsetHeight
 
-          var canvasWidth = canvas.width;
-          var canvasHeight = canvas.height;
+  //         var canvasWidth = canvas.width;
+  //         var canvasHeight = canvas.height;
+  //         if (canvasHeight >= contHeight || canvasWidth >= contWith) {
+  //           console.log(previousZoom);
+  //           console.log(zoom);
+  //           if ((canvasWidth >= 100 && canvasWidth <= 2000) || (zoom != previousZoom)) {
 
-          if (canvasHeight >= contHeight || canvasWidth >= contWith) {
-            if ((canvasWidth >= 100 && canvasWidth <= 2000) || (zoom != previousZoom)) {
+  //             //canvas.zoomToPoint({ x: mouseX, y: mouseY }, zoom); 
 
-              // Obtener la posición del mouse dentro del contenedor
-              const mouseX = opt.clientX - container.offsetLeft;
-              const mouseY = opt.clientY - container.offsetTop;
+  //             canvas.forEachObject(function (obj) {
+  //               obj.set({
+  //                 left: obj.left * zoom,
+  //                 top: obj.top * zoom,
+  //                 scaleX: obj.scaleX * zoom,
+  //                 scaleY: obj.scaleY * zoom
+  //               })
+  //               obj.setCoords();
+  //             });
 
+  //             canvas.discardActiveObject();
+  //             canvas.setDimensions({
+  //               width: canvasWidth * zoom,
+  //               height: canvasHeight * zoom
+  //             });
 
-              // Calcular la nueva posición del canvas para mantener el punto del mouse en el mismo lugar después del zoom
-              const newLeft = (canvasWidth - contWith) * (mouseX / contWith);
-              const newTop = (canvasHeight - contHeight) * (mouseY / contHeight);
+  //             // Obtener la posición del mouse dentro del contenedor
+  //             const mouseX = opt.clientX - container.offsetLeft;
+  //             const mouseY = opt.clientY - container.offsetTop;
 
-              console.log(newLeft, newTop);
+  //             // canvas.relativePan({
+  //             //   x: mouseX,
+  //             //   y: mouseY
+  //             // });
 
-              canvas.set({
-                left: 1000,
-                top: 1000
-              });
+  //             previousZoom = zoom;
+  //             canvas.renderAll();
+  //             canvas.calcOffset();
+  //           }
 
-              console.log(canvas.get)
+  //           opt.preventDefault();
+  //           opt.stopPropagation();
 
-              canvas.forEachObject(function (obj) {
-                obj.set({
-                  left: obj.left * zoom,
-                  top: obj.top * zoom,
-                  scaleX: obj.scaleX * zoom,
-                  scaleY: obj.scaleY * zoom
-                })
-                obj.setCoords();
-              });
+  //         }
+  //         else {
+  //           if ((canvasWidth >= 100 && canvasWidth <= 2000) || (zoom != previousZoom)) {
+  //             canvas.setZoom(zoom / zoom);
+  //             canvas.forEachObject(function (obj) {
+  //               obj.set({
+  //                 left: obj.left * zoom,
+  //                 top: obj.top * zoom,
+  //                 scaleX: obj.scaleX * zoom,
+  //                 scaleY: obj.scaleY * zoom
+  //               })
+  //               obj.setCoords();
+  //             });
 
-              canvas.discardActiveObject(); // optional
-              canvas.setDimensions({
-                width: canvasWidth * zoom,
-                height: canvasHeight * zoom
-              });
-              previousZoom = zoom;
-              canvas.renderAll();
-              canvas.calcOffset(); // no clue
-            }
+  //             canvas.discardActiveObject(); // optional
+  //             canvas.setDimensions({
+  //               width: canvasWidth * zoom,
+  //               height: canvasHeight * zoom
+  //             });
+  //             previousZoom = zoom;
+  //             canvas.renderAll();
+  //             canvas.calcOffset(); // no clue
+  //           }
 
-            opt.preventDefault();
-            opt.stopPropagation();
+  //           opt.preventDefault();
+  //           opt.stopPropagation();
+  //         }
 
-          }
-          else {
-            if ((canvasWidth >= 100 && canvasWidth <= 2000) || (zoom != previousZoom)) {
-              canvas.forEachObject(function (obj) {
-                obj.set({
-                  left: obj.left * zoom,
-                  top: obj.top * zoom,
-                  scaleX: obj.scaleX * zoom,
-                  scaleY: obj.scaleY * zoom
-                })
-                obj.setCoords();
-              });
-
-              canvas.discardActiveObject(); // optional
-              canvas.setDimensions({
-                width: canvasWidth * zoom,
-                height: canvasHeight * zoom
-              });
-              previousZoom = zoom;
-              canvas.renderAll();
-              canvas.calcOffset(); // no clue
-            }
-
-            opt.preventDefault();
-            opt.stopPropagation();
-          }
-
-        }
-      });
+  //       }
+  //     });
 
 
-    }
-  }, [canvas]);
-
+  //   }
+  // }, [canvas]);
 
   useEffect(() => {
     const handleKeyDowm = (event) => {
@@ -329,9 +361,9 @@ export default function CanvasContainer() {
   };
 
   return (
-    <div className='overflow-hidden bg-green-300' style={{ minWidth: '100%', minHeight: '100%' }}>
+    <div className='overflow-hidden bg-slate-100' style={{ minWidth: '100%', minHeight: '100%' }}>
       <SideBar onImageUpload={handleImageUpload} generateDownload={generateDownload} canvas={canvas} />
-      <FabricJS />
+      <FabricJS canvas={canvas} />
     </div>
   );
 }
