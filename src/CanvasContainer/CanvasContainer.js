@@ -3,93 +3,89 @@ import { fabric } from 'fabric';
 import SideBar from '../Sidebar/Sidebar';
 import FabricJS from './FabricsJS/FabricJS';
 
+import './canvas.css';
+
 export default function CanvasContainer() {
   const [canvas, setCanvas] = useState(null);
+  const [limiter, setLimiter] = useState(null);
+  let topper, botter, lefter, righter;
+
 
 
   useEffect(() => {
 
+    const container = document.getElementById('container');
+
     const fabricCanvas = new fabric.Canvas('canvas', {
-      width: 800,
-      height: 600,
-      backgroundColor: '#fff',
+      width: container.offsetWidth,
+      height: container.offsetHeight,
+      backgroundColor: '#ccc',
       selection: true,
       lockScalingFlip: true,
-      centeredScaling: true
+      centeredScaling: true,
     });
-    // const container = document.getElementById('container');
-    // let previousZoom = 0;
-    // fabricCanvas.on('mouse:wheel', function (opt) {
-    //   var delta = opt.e.deltaY;
-    //   var zoom = fabricCanvas.getZoom();
-    //   zoom *= 0.999 ** delta;
-    //   if (zoom > 20) zoom = 20;
-    //   if (zoom < 0.5) zoom = 0.5;
-
-    //   const contWith = container.offsetWidth
-    //   const contHeight = container.offsetHeight
-
-    //   var canvasWidth = fabricCanvas.width;
-    //   var canvasHeight = fabricCanvas.height;
-
-    //   if (canvasHeight >= contHeight || canvasWidth >= contWith) {
-    //     if ((canvasWidth >= 100 && canvasWidth <= 2000) || (zoom != previousZoom)) {
 
 
-    //       fabricCanvas.forEachObject(function (obj) {
-    //         obj.set({
-    //           left: obj.left * zoom,
-    //           top: obj.top * zoom,
-    //           scaleX: obj.scaleX * zoom,
-    //           scaleY: obj.scaleY * zoom
-    //         })
-    //         obj.setCoords();
-    //       });
+    const limiter = new fabric.Rect({
+      fill: '#fff',
+      width: 1000,
+      height: 1000,
+      selectable: false,
+      hoverCursor: 'auto',
 
-    //       fabricCanvas.discardActiveObject();
-    //       fabricCanvas.setDimensions({
-    //         width: canvasWidth * zoom,
-    //         height: canvasHeight * zoom
-    //       });
-    //       previousZoom = zoom;
-    //       fabricCanvas.renderAll();
-    //       fabricCanvas.calcOffset();
-    //     }
+    });
 
-    //     opt.preventDefault();
-    //     opt.stopPropagation();
 
-    //   }
-    //   else {
-    //     if ((canvasWidth >= 100 && canvasWidth <= 2000) || (zoom != previousZoom)) {
-    //       fabricCanvas.setZoom(zoom / zoom);
-    //       fabricCanvas.forEachObject(function (obj) {
-    //         obj.set({
-    //           left: obj.left * zoom,
-    //           top: obj.top * zoom,
-    //           scaleX: obj.scaleX * zoom,
-    //           scaleY: obj.scaleY * zoom
-    //         })
-    //         obj.setCoords();
-    //       });
+    fabricCanvas.add(limiter);
 
-    //       fabricCanvas.discardActiveObject(); // optional
-    //       fabricCanvas.setDimensions({
-    //         width: canvasWidth * zoom,
-    //         height: canvasHeight * zoom
-    //       });
-    //       previousZoom = zoom;
-    //       fabricCanvas.renderAll();
-    //       fabricCanvas.calcOffset(); // no clue
-    //     }
+    topper = new fabric.Rect({ top: -1001, left: -1000, fill: "#ccc", width: 3000, height: 1000, selectable: false, hoverCursor: 'auto' });
+    fabricCanvas.add(topper);
 
-    //     opt.preventDefault();
-    //     opt.stopPropagation();
-    //   }
-    //   opt.e.preventDefault();
-    //   opt.e.stopPropagation();
-    // });
+    botter = new fabric.Rect({ top: 1000, left: -1000, fill: "#ccc", width: 3000, height: 1000, selectable: false, hoverCursor: 'auto' });
+    fabricCanvas.add(botter);
 
+    lefter = new fabric.Rect({ left: -1001, top: -5, fill: "#ccc", width: 1000, height: 1010, selectable: false, hoverCursor: 'auto' });
+    fabricCanvas.add(lefter);
+
+    righter = new fabric.Rect({ left: 1000, top: -5, fill: "#ccc", width: 1000, height: 1010, selectable: false, hoverCursor: 'auto' });
+    fabricCanvas.add(righter);
+
+
+
+
+    fabricCanvas.setZoom(0.5);
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    fabricCanvas.forEachObject((obj) => {
+      const objBoundingBox = obj.getBoundingRect();
+      minX = Math.min(minX, objBoundingBox.left);
+      minY = Math.min(minY, objBoundingBox.top);
+      maxX = Math.max(maxX, objBoundingBox.left + objBoundingBox.width);
+      maxY = Math.max(maxY, objBoundingBox.top + objBoundingBox.height);
+    });
+    const boundingBoxCenterX = (minX + maxX) / 2;
+    const boundingBoxCenterY = (minY + maxY) / 2;
+    const viewportCenter = fabricCanvas.getCenter();
+    const deltaX = viewportCenter.left - boundingBoxCenterX;
+    const deltaY = viewportCenter.top - boundingBoxCenterY;
+
+    // Setting canvas viewport's center to bounding box's center
+    fabricCanvas.relativePan(new fabric.Point(deltaX, deltaY));
+
+
+
+    fabricCanvas.on('mouse:wheel', function (opt) {
+      var delta = opt.e.deltaY;
+      var zoom = fabricCanvas.getZoom();
+      zoom *= 0.999 ** delta;
+      if (zoom > 20) zoom = 20;
+      if (zoom < 0.1) zoom = 0.1;
+      fabricCanvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
+      opt.e.preventDefault();
+      opt.e.stopPropagation();
+
+
+
+    });
 
     let initialTop, initialLeft, initialScaleX, initialScaleY;
     fabricCanvas.on('mouse:down', function (e) {
@@ -102,15 +98,28 @@ export default function CanvasContainer() {
       }
     });
 
+
     fabricCanvas.on('object:scaling', function (e) {
       const obj = e.target;
       obj.lockScalingFlip = true;
 
     });
 
+    fabricCanvas.on('object:moving', function (event) {
+      const obj = event.target;
+      const objectsToCheck = [topper, botter, righter, lefter];
+
+      for (const checker of objectsToCheck) {
+        if (obj.intersectsWithObject(checker)) {
+          checker.bringToFront();
+        }
+      }
+    });
+
+
     fabricCanvas.on('object:modified', function (e) {
       const obj = e.target;
-      if (obj && !obj.isOnScreen()) {
+      if (obj && !obj.intersectsWithObject(limiter)) {
         obj.set({
           left: initialLeft,
           top: initialTop,
@@ -125,12 +134,12 @@ export default function CanvasContainer() {
     fabricCanvas.on('before:selection:cleared', function (e) {
       const obj = e.target;
       if (obj && obj.type === 'activeSelection') {
-        const canvasWidth = fabricCanvas.width;
-        const canvasHeight = fabricCanvas.height;
+        const limiterWith = limiter.width;
+        const limiterHeight = limiter.height;
         const leftBoundary = 0;
         const topBoundary = 0;
-        const rightBoundary = canvasWidth - obj.width * obj.scaleX;
-        const bottomBoundary = canvasHeight - obj.height * obj.scaleY;
+        const rightBoundary = limiterWith - obj.width * obj.scaleX;
+        const bottomBoundary = limiterHeight - obj.height * obj.scaleY;
         obj.set({
           left: Math.max(leftBoundary, Math.min(obj.left, rightBoundary)),
           top: Math.max(topBoundary, Math.min(obj.top, bottomBoundary))
@@ -142,124 +151,66 @@ export default function CanvasContainer() {
     });
 
 
+    var blue = new fabric.Rect({ fill: "blue", width: 100, height: 100 });
+    fabricCanvas.add(blue);
 
-    var rect = new fabric.Rect({ fill: "red", width: 100, height: 100 });
-    var rect2 = new fabric.Rect({ fill: "blue", width: 100, height: 100 });
-    fabricCanvas.add(rect);
-    fabricCanvas.add(rect2);
-    var limiter = new fabric.Rect({ 
-      width: 500,
-      height: 500,
-      fill: 'transparent',
-      borderColor: 'black',
-      strokeWidth: 2
-    });
-
-    fabricCanvas.add(limiter);
     setCanvas(fabricCanvas);
+    setLimiter(limiter);
+
 
     return () => {
       fabricCanvas.off('mouse:down');
       fabricCanvas.off('object:scaling');
       fabricCanvas.off('object:modified');
       fabricCanvas.off('before:selection:cleared');
-      //fabricCanvas.off('mouse:wheel');
       fabricCanvas.dispose();
     };
   }, []);
 
-  // useEffect(() => {
-  //   let previousZoom = 0;
-  //   if (canvas) {
-  //     const container = document.getElementById('container');
-  //     container.addEventListener('wheel', function (opt) {
-  //       canvas.lowerCanvasEl = document.getElementById('canvas');
-  //       if (opt.ctrlKey && canvas.lowerCanvasEl !== undefined) {
-  //         var delta = opt.deltaY;
-  //         var zoom = canvas.getZoom();
-  //         zoom *= 0.999 ** delta;
-  //         if (zoom > 20) zoom = 20;
-  //         if (zoom < 0.5) zoom = 0.5;
+  useEffect(() => {
+    let isPanning = false;
+    let lastPosX = 0;
+    let lastPosY = 0;
 
-  //         const contWith = container.offsetWidth
-  //         const contHeight = container.offsetHeight
+    const handleMouseDown = (event) => {
+      if (event.altKey) {
+        isPanning = true;
+        lastPosX = event.clientX;
+        lastPosY = event.clientY;
 
-  //         var canvasWidth = canvas.width;
-  //         var canvasHeight = canvas.height;
-  //         if (canvasHeight >= contHeight || canvasWidth >= contWith) {
-  //           console.log(previousZoom);
-  //           console.log(zoom);
-  //           if ((canvasWidth >= 100 && canvasWidth <= 2000) || (zoom != previousZoom)) {
+        document.body.classList.add('alt-panning'); // Agregar clase al cuerpo del documento
+      }
+    };
 
-  //             //canvas.zoomToPoint({ x: mouseX, y: mouseY }, zoom); 
+    const handleMouseMove = (event) => {
+      if (isPanning) {
+        const deltaX = event.clientX - lastPosX;
+        const deltaY = event.clientY - lastPosY;
 
-  //             canvas.forEachObject(function (obj) {
-  //               obj.set({
-  //                 left: obj.left * zoom,
-  //                 top: obj.top * zoom,
-  //                 scaleX: obj.scaleX * zoom,
-  //                 scaleY: obj.scaleY * zoom
-  //               })
-  //               obj.setCoords();
-  //             });
+        // Panning the canvas
+        canvas.relativePan({ x: deltaX, y: deltaY });
 
-  //             canvas.discardActiveObject();
-  //             canvas.setDimensions({
-  //               width: canvasWidth * zoom,
-  //               height: canvasHeight * zoom
-  //             });
+        lastPosX = event.clientX;
+        lastPosY = event.clientY;
+      }
+    };
 
-  //             // Obtener la posición del mouse dentro del contenedor
-  //             const mouseX = opt.clientX - container.offsetLeft;
-  //             const mouseY = opt.clientY - container.offsetTop;
+    const handleMouseUp = () => {
+      isPanning = false;
 
-  //             // canvas.relativePan({
-  //             //   x: mouseX,
-  //             //   y: mouseY
-  //             // });
+      document.body.classList.remove('alt-panning'); 
+    };
 
-  //             previousZoom = zoom;
-  //             canvas.renderAll();
-  //             canvas.calcOffset();
-  //           }
+    document.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
 
-  //           opt.preventDefault();
-  //           opt.stopPropagation();
-
-  //         }
-  //         else {
-  //           if ((canvasWidth >= 100 && canvasWidth <= 2000) || (zoom != previousZoom)) {
-  //             canvas.setZoom(zoom / zoom);
-  //             canvas.forEachObject(function (obj) {
-  //               obj.set({
-  //                 left: obj.left * zoom,
-  //                 top: obj.top * zoom,
-  //                 scaleX: obj.scaleX * zoom,
-  //                 scaleY: obj.scaleY * zoom
-  //               })
-  //               obj.setCoords();
-  //             });
-
-  //             canvas.discardActiveObject(); // optional
-  //             canvas.setDimensions({
-  //               width: canvasWidth * zoom,
-  //               height: canvasHeight * zoom
-  //             });
-  //             previousZoom = zoom;
-  //             canvas.renderAll();
-  //             canvas.calcOffset(); // no clue
-  //           }
-
-  //           opt.preventDefault();
-  //           opt.stopPropagation();
-  //         }
-
-  //       }
-  //     });
-
-
-  //   }
-  // }, [canvas]);
+    return () => {
+      document.removeEventListener('mousedown', handleMouseDown);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [canvas]);
 
   useEffect(() => {
     const handleKeyDowm = (event) => {
@@ -334,36 +285,73 @@ export default function CanvasContainer() {
     }
   };
 
-  const handleImageUpload = (imageUrl) => {
+  const generateDownload = () => {
     if (canvas) {
-      fabric.Image.fromURL(imageUrl, (img) => {
-        // Scale the image to fit the canvas
-        img.scaleToWidth(800);
-        img.scaleToHeight(600);
-        canvas.add(img);
+      let tempCanvas = new fabric.Canvas();
+      canvas.clone(tempCanvas => {
+        tempCanvas.remove(topper);
+        tempCanvas.remove(botter);
+        tempCanvas.remove(lefter);
+        tempCanvas.remove(righter);
+
+
+
+        limiter.set({ left: 0, top: 0 });
+        tempCanvas.setDimensions({ width: limiter.width, height: limiter.height });
+        tempCanvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
+
+        tempCanvas.renderAll();
+        const dataURL = tempCanvas.toDataURL({
+          format: 'png',
+          quality: 1
+        });
+
+        // Crear un enlace de descarga para la imagen
+        const link = document.createElement('a');
+        link.href = dataURL;
+        link.download = 'Sin_Titulo.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+
+
+        tempCanvas.dispose();
       });
     }
   };
 
-  const generateDownload = () => {
+  const prueba = () => {
     if (canvas) {
-      // Get the canvas data URL
-      const dataURL = canvas.toDataURL({ format: 'png' });
+      canvas.remove(topper);
+      canvas.remove(botter);
+      canvas.remove(lefter);
+      canvas.remove(righter);
 
-      // Create a download link
-      const link = document.createElement('a');
-      link.href = dataURL;
-      link.download = 'Sin Titulo.png';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+
+
+      limiter.set({ left: 0, top: 0 });
+      canvas.setDimensions({ width: limiter.width, height: limiter.height });
+      canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
+
+
+
+      canvas.renderAll();
+
+
+
     }
-  };
+  }
+
+
 
   return (
     <div className='overflow-hidden bg-slate-100' style={{ minWidth: '100%', minHeight: '100%' }}>
-      <SideBar onImageUpload={handleImageUpload} generateDownload={generateDownload} canvas={canvas} />
+      <SideBar canvas={canvas} generateDownload={generateDownload} />
       <FabricJS canvas={canvas} />
+      <div className='absolute w-42 h-10 bg-black text-white font-semibold text-base'>
+        <button className='w-full h-full' onClick={prueba}>DISTORSIONAR</button>
+      </div>
     </div>
   );
 }

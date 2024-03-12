@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 
+import { fabric } from 'fabric';
+
 import { ReactComponent as QuestionMarkSVG } from '../icons/question-solid.svg';
 
 
@@ -25,9 +27,18 @@ export default function SideBar(props) {
     const file = event.target.files[0];
     if (file) {
       const url = URL.createObjectURL(file);
-      props.onImageUpload(url);
+      if (props.canvas) {
+        fabric.Image.fromURL(url, (img) => {
+          img.scaleToWidth(800);
+          img.scaleToHeight(600);
+          props.canvas.add(img);
+        });
+      }
     }
   };
+  
+
+
 
   return (
     <aside className='bg-white z-50 animate-fade-in flex flex-col-reverse fixed w-[300px]
