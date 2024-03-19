@@ -1,16 +1,14 @@
-
-import Navbar from './Navbar/Navbar'
-import CanvasContainer from './CanvasContainer/CanvasContainer';
-
+import { Outlet } from "react-router-dom";
+import Navbar from "./Navbar/Navbar";
 function App() {
 
   return (
-    <div>
-      <header>
-        <Navbar/>
-      </header>
+    <div className="App">
       <main>
-        <CanvasContainer/>
+        <header>
+          <Navbar />
+        </header>
+        <Outlet />
       </main>
     </div>
   );

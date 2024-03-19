@@ -1,94 +1,99 @@
 import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { fabric } from 'fabric';
 import SideBar from '../Sidebar/Sidebar';
 import FabricJS from './FabricsJS/FabricJS';
+import axios from 'axios';
 
 import './canvas.css';
 
+import HandleKeyDown from './FabricsJS/HandleKeyDown';
+import HandleDownload from './FabricsJS/HandleDownload';
+
 export default function CanvasContainer() {
+  const { id } = useParams();
   const [canvas, setCanvas] = useState(null);
   const [limiter, setLimiter] = useState(null);
-  let topper, botter, lefter, righter;
-
 
 
   useEffect(() => {
-
-    const container = document.getElementById('container');
-
-    const fabricCanvas = new fabric.Canvas('canvas', {
-      width: container.offsetWidth,
-      height: container.offsetHeight,
-      backgroundColor: '#ccc',
-      selection: true,
-      lockScalingFlip: true,
-      centeredScaling: true,
-    });
+    axios.get(`${process.env.REACT_APP_BACKEND_URL}/canvas/get/${id}`)
+      .then(response => {
+        const container = document.getElementById('container');
+        const canvas = new fabric.Canvas('canvas', {
+          width: container.offsetWidth,
+          height: container.offsetHeight,
+        });
 
 
-    const limiter = new fabric.Rect({
-      fill: '#fff',
-      width: 1000,
-      height: 1000,
-      selectable: false,
-      hoverCursor: 'auto',
+        console.log(response.data.content)
 
-    });
+        canvas.loadFromJSON(response.data.content);
+        canvas.forEachObject((obj) => {
+          if (obj.isLimiter) {
+            console.log('limiter');
+            obj.sendToBack();
+          }
+        });
 
+        //canvas.add(limiter);
 
-    fabricCanvas.add(limiter);
+        handleCanvasFunctionalities(canvas);
 
-    topper = new fabric.Rect({ top: -1001, left: -1000, fill: "#ccc", width: 3000, height: 1000, selectable: false, hoverCursor: 'auto' });
-    fabricCanvas.add(topper);
+        handleCopyPaste(canvas);
 
-    botter = new fabric.Rect({ top: 1000, left: -1000, fill: "#ccc", width: 3000, height: 1000, selectable: false, hoverCursor: 'auto' });
-    fabricCanvas.add(botter);
+        handlePanning(canvas);
 
-    lefter = new fabric.Rect({ left: -1001, top: -5, fill: "#ccc", width: 1000, height: 1010, selectable: false, hoverCursor: 'auto' });
-    fabricCanvas.add(lefter);
+        setCanvas(canvas);
 
-    righter = new fabric.Rect({ left: 1000, top: -5, fill: "#ccc", width: 1000, height: 1010, selectable: false, hoverCursor: 'auto' });
-    fabricCanvas.add(righter);
+        return () => {
+          canvas.dispose();
+        };
+      })
+      .catch(error => {
+        console.error(error);
+      });
 
+  }, [id]);
 
-
-
-    fabricCanvas.setZoom(0.5);
+  const handleCanvasFunctionalities = (canvas) => {
+    canvas.setZoom(0.5);
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    fabricCanvas.forEachObject((obj) => {
+
+    canvas.forEachObject((obj) => {
       const objBoundingBox = obj.getBoundingRect();
       minX = Math.min(minX, objBoundingBox.left);
       minY = Math.min(minY, objBoundingBox.top);
       maxX = Math.max(maxX, objBoundingBox.left + objBoundingBox.width);
       maxY = Math.max(maxY, objBoundingBox.top + objBoundingBox.height);
     });
+
     const boundingBoxCenterX = (minX + maxX) / 2;
     const boundingBoxCenterY = (minY + maxY) / 2;
-    const viewportCenter = fabricCanvas.getCenter();
+    const viewportCenter = canvas.getCenter();
     const deltaX = viewportCenter.left - boundingBoxCenterX;
     const deltaY = viewportCenter.top - boundingBoxCenterY;
-
     // Setting canvas viewport's center to bounding box's center
-    fabricCanvas.relativePan(new fabric.Point(deltaX, deltaY));
+    canvas.relativePan(new fabric.Point(deltaX, deltaY));
 
-
-
-    fabricCanvas.on('mouse:wheel', function (opt) {
+    canvas.on('mouse:wheel', function (opt) {
       var delta = opt.e.deltaY;
-      var zoom = fabricCanvas.getZoom();
+      var zoom = canvas.getZoom();
       zoom *= 0.999 ** delta;
       if (zoom > 20) zoom = 20;
       if (zoom < 0.1) zoom = 0.1;
-      fabricCanvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
+      canvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
       opt.e.preventDefault();
       opt.e.stopPropagation();
+    });
 
-
-
+    canvas.on('object:scaling', function (e) {
+      const obj = e.target;
+      obj.lockScalingFlip = true;
     });
 
     let initialTop, initialLeft, initialScaleX, initialScaleY;
-    fabricCanvas.on('mouse:down', function (e) {
+    canvas.on('mouse:down', function (e) {
       const obj = e.target;
       if (obj && obj.selectable) {
         initialTop = obj.top;
@@ -98,76 +103,60 @@ export default function CanvasContainer() {
       }
     });
 
+    // canvas.on('object:modified', function (e) {
+    //   const obj = e.target;
+    //   if (obj && !obj.intersectsWithObject(limiter)) {
+    //     console.log('out of bounds');
+    //     obj.set({
+    //       left: initialLeft,
+    //       top: initialTop,
+    //       scaleX: initialScaleX,
+    //       scaleY: initialScaleY,
+    //     });
+    //     obj.setCoords();
+    //     canvas.requestRenderAll();
+    //   }
+    // });
 
-    fabricCanvas.on('object:scaling', function (e) {
-      const obj = e.target;
-      obj.lockScalingFlip = true;
-
-    });
-
-    fabricCanvas.on('object:moving', function (event) {
-      const obj = event.target;
-      const objectsToCheck = [topper, botter, righter, lefter];
-
-      for (const checker of objectsToCheck) {
-        if (obj.intersectsWithObject(checker)) {
-          checker.bringToFront();
-        }
-      }
-    });
-
-
-    fabricCanvas.on('object:modified', function (e) {
-      const obj = e.target;
-      if (obj && !obj.intersectsWithObject(limiter)) {
-        obj.set({
-          left: initialLeft,
-          top: initialTop,
-          scaleX: initialScaleX,
-          scaleY: initialScaleY,
-        });
-        obj.setCoords();
-        fabricCanvas.requestRenderAll();
-      }
-    });
-
-    fabricCanvas.on('before:selection:cleared', function (e) {
-      const obj = e.target;
-      if (obj && obj.type === 'activeSelection') {
-        const limiterWith = limiter.width;
-        const limiterHeight = limiter.height;
-        const leftBoundary = 0;
-        const topBoundary = 0;
-        const rightBoundary = limiterWith - obj.width * obj.scaleX;
-        const bottomBoundary = limiterHeight - obj.height * obj.scaleY;
-        obj.set({
-          left: Math.max(leftBoundary, Math.min(obj.left, rightBoundary)),
-          top: Math.max(topBoundary, Math.min(obj.top, bottomBoundary))
-        });
-
-
-        fabricCanvas.renderAll();
-      }
-    });
-
-
-    var blue = new fabric.Rect({ fill: "blue", width: 100, height: 100 });
-    fabricCanvas.add(blue);
-
-    setCanvas(fabricCanvas);
-    setLimiter(limiter);
+    // canvas.on('before:selection:cleared', function (e) {
+    //   const obj = e.target;
+    //   if (obj && obj.type === 'activeSelection') {
+    //     const limiterWith = limiter.width;
+    //     const limiterHeight = limiter.height;
+    //     const leftBoundary = 0;
+    //     const topBoundary = 0;
+    //     const rightBoundary = limiterWith - obj.width * obj.scaleX;
+    //     const bottomBoundary = limiterHeight - obj.height * obj.scaleY;
+    //     obj.set({
+    //       left: Math.max(leftBoundary, Math.min(obj.left, rightBoundary)),
+    //       top: Math.max(topBoundary, Math.min(obj.top, bottomBoundary))
+    //     });
+    //     canvas.renderAll();
+    //   }
+    // });
 
 
     return () => {
-      fabricCanvas.off('mouse:down');
-      fabricCanvas.off('object:scaling');
-      fabricCanvas.off('object:modified');
-      fabricCanvas.off('before:selection:cleared');
-      fabricCanvas.dispose();
+      canvas.off('mouse:down');
+      canvas.off('object:scaling');
+      canvas.off('object:modified');
+      canvas.off('before:selection:cleared');
     };
-  }, []);
+  };
 
-  useEffect(() => {
+  const handleCopyPaste = (canvas) => {
+    const handleKeyInteraction = (event) => {
+      HandleKeyDown(event, canvas);
+    };
+    document.addEventListener('keydown', handleKeyInteraction);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyInteraction);
+    };
+  };
+
+  const handlePanning = (canvas) => {
+
     let isPanning = false;
     let lastPosX = 0;
     let lastPosY = 0;
@@ -178,7 +167,7 @@ export default function CanvasContainer() {
         lastPosX = event.clientX;
         lastPosY = event.clientY;
 
-        document.body.classList.add('alt-panning'); // Agregar clase al cuerpo del documento
+        document.body.classList.add('alt-panning');
       }
     };
 
@@ -198,7 +187,7 @@ export default function CanvasContainer() {
     const handleMouseUp = () => {
       isPanning = false;
 
-      document.body.classList.remove('alt-panning'); 
+      document.body.classList.remove('alt-panning');
     };
 
     document.addEventListener('mousedown', handleMouseDown);
@@ -210,147 +199,34 @@ export default function CanvasContainer() {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [canvas]);
-
-  useEffect(() => {
-    const handleKeyDowm = (event) => {
-      if (canvas) {
-
-        const activeObject = canvas.getActiveObject();
-        if (activeObject) {
-          if (event.ctrlKey && event.key === 'c') {
-            copyObjects();
-          } else if (event.ctrlKey && event.key === 'v') {
-            pasteObjects();
-          } else if (!activeObject.isEditing && (event.key === 'Delete' || event.key === "Backspace")) {
-            deleteObjects();
-          }
-        }
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDowm);
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDowm);
-    };
-  }, [canvas]);
-
-  const copyObjects = () => {
-    if (canvas) {
-      const activeObject = canvas.getActiveObject();
-      if (activeObject) {
-        canvas.getActiveObject().clone((cloned) => {
-          canvas.set('clipboard', cloned);
-        });
-      }
-    }
   };
 
-  const pasteObjects = () => {
-    if (canvas) {
-      canvas.get('clipboard').clone((clonedObj) => {
-        canvas.discardActiveObject();
-        clonedObj.set({
-          left: clonedObj.left + 10,
-          top: clonedObj.top + 10,
-          evented: true,
-        });
-        if (clonedObj.type === 'activeSelection') {
-          clonedObj.canvas = canvas;
-          clonedObj.forEachObject((obj) => {
-            canvas.add(obj);
-          });
-          clonedObj.setCoords();
-        } else {
-          canvas.add(clonedObj);
-        }
-        canvas.setActiveObject(clonedObj);
-        canvas.requestRenderAll();
-      })
-    }
-  };
 
-  const deleteObjects = () => {
+  const updateCanvas = () => {
     if (canvas) {
-      const activeObject = canvas.getActiveObject();
-      if (activeObject && activeObject.type === 'activeSelection') {
-        activeObject.forEachObject((obj) => {
-          canvas.remove(obj);
+      const canvasJson = JSON.stringify(canvas.toJSON(['selectable', 'hoverCursor']));
+      axios.put(`${process.env.REACT_APP_BACKEND_URL}/canvas/put/${id}`, { content: canvasJson })
+        .then(response => {
+          console.log(response);
+        })
+        .catch(error => {
+          console.error(error);
         });
-      }
-      canvas.remove(activeObject);
-      canvas.discardActiveObject();
-      canvas.requestRenderAll();
     }
   };
 
   const generateDownload = () => {
     if (canvas) {
-      let tempCanvas = new fabric.Canvas();
-      canvas.clone(tempCanvas => {
-        tempCanvas.remove(topper);
-        tempCanvas.remove(botter);
-        tempCanvas.remove(lefter);
-        tempCanvas.remove(righter);
-
-
-
-        limiter.set({ left: 0, top: 0 });
-        tempCanvas.setDimensions({ width: limiter.width, height: limiter.height });
-        tempCanvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
-
-        tempCanvas.renderAll();
-        const dataURL = tempCanvas.toDataURL({
-          format: 'png',
-          quality: 1
-        });
-
-        // Crear un enlace de descarga para la imagen
-        const link = document.createElement('a');
-        link.href = dataURL;
-        link.download = 'Sin_Titulo.png';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-
-
-        tempCanvas.dispose();
-      });
+      HandleDownload(canvas, limiter)
     }
   };
-
-  const prueba = () => {
-    if (canvas) {
-      canvas.remove(topper);
-      canvas.remove(botter);
-      canvas.remove(lefter);
-      canvas.remove(righter);
-
-
-
-      limiter.set({ left: 0, top: 0 });
-      canvas.setDimensions({ width: limiter.width, height: limiter.height });
-      canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
-
-
-
-      canvas.renderAll();
-
-
-
-    }
-  }
-
-
 
   return (
     <div className='overflow-hidden bg-slate-100' style={{ minWidth: '100%', minHeight: '100%' }}>
       <SideBar canvas={canvas} generateDownload={generateDownload} />
       <FabricJS canvas={canvas} />
       <div className='absolute w-42 h-10 bg-black text-white font-semibold text-base'>
-        <button className='w-full h-full' onClick={prueba}>DISTORSIONAR</button>
+        <button className='w-full h-full' onClick={updateCanvas}>Guardar Canvas</button>
       </div>
     </div>
   );
