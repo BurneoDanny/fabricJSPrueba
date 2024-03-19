@@ -15,40 +15,25 @@ export default function CanvasContainer() {
   const [canvas, setCanvas] = useState(null);
   const [limiter, setLimiter] = useState(null);
 
-
   useEffect(() => {
     axios.get(`${process.env.REACT_APP_BACKEND_URL}/canvas/get/${id}`)
       .then(response => {
+        const canvasJson = response.data.content;
         const container = document.getElementById('container');
         const canvas = new fabric.Canvas('canvas', {
           width: container.offsetWidth,
           height: container.offsetHeight,
         });
-
-
-        console.log(response.data.content)
-
-        canvas.loadFromJSON(response.data.content);
-        canvas.forEachObject((obj) => {
-          if (obj.isLimiter) {
-            console.log('limiter');
-            obj.sendToBack();
-          }
+        canvas.loadFromJSON(canvasJson, () => {
+          canvas.renderAll();
         });
 
-        //canvas.add(limiter);
-
         handleCanvasFunctionalities(canvas);
-
         handleCopyPaste(canvas);
-
         handlePanning(canvas);
 
         setCanvas(canvas);
-
-        return () => {
-          canvas.dispose();
-        };
+        setLimiter(limiter);
       })
       .catch(error => {
         console.error(error);
@@ -103,37 +88,37 @@ export default function CanvasContainer() {
       }
     });
 
-    // canvas.on('object:modified', function (e) {
-    //   const obj = e.target;
-    //   if (obj && !obj.intersectsWithObject(limiter)) {
-    //     console.log('out of bounds');
-    //     obj.set({
-    //       left: initialLeft,
-    //       top: initialTop,
-    //       scaleX: initialScaleX,
-    //       scaleY: initialScaleY,
-    //     });
-    //     obj.setCoords();
-    //     canvas.requestRenderAll();
-    //   }
-    // });
+    canvas.on('object:modified', function (e) {
+      const obj = e.target;
+      if (obj && !obj.intersectsWithObject(limiter)) {
+        console.log('out of bounds');
+        obj.set({
+          left: initialLeft,
+          top: initialTop,
+          scaleX: initialScaleX,
+          scaleY: initialScaleY,
+        });
+        obj.setCoords();
+        canvas.requestRenderAll();
+      }
+    });
 
-    // canvas.on('before:selection:cleared', function (e) {
-    //   const obj = e.target;
-    //   if (obj && obj.type === 'activeSelection') {
-    //     const limiterWith = limiter.width;
-    //     const limiterHeight = limiter.height;
-    //     const leftBoundary = 0;
-    //     const topBoundary = 0;
-    //     const rightBoundary = limiterWith - obj.width * obj.scaleX;
-    //     const bottomBoundary = limiterHeight - obj.height * obj.scaleY;
-    //     obj.set({
-    //       left: Math.max(leftBoundary, Math.min(obj.left, rightBoundary)),
-    //       top: Math.max(topBoundary, Math.min(obj.top, bottomBoundary))
-    //     });
-    //     canvas.renderAll();
-    //   }
-    // });
+    canvas.on('before:selection:cleared', function (e) {
+      const obj = e.target;
+      if (obj && obj.type === 'activeSelection') {
+        const limiterWith = limiter.width;
+        const limiterHeight = limiter.height;
+        const leftBoundary = 0;
+        const topBoundary = 0;
+        const rightBoundary = limiterWith - obj.width * obj.scaleX;
+        const bottomBoundary = limiterHeight - obj.height * obj.scaleY;
+        obj.set({
+          left: Math.max(leftBoundary, Math.min(obj.left, rightBoundary)),
+          top: Math.max(topBoundary, Math.min(obj.top, bottomBoundary))
+        });
+        canvas.renderAll();
+      }
+    });
 
 
     return () => {
@@ -145,6 +130,7 @@ export default function CanvasContainer() {
   };
 
   const handleCopyPaste = (canvas) => {
+
     const handleKeyInteraction = (event) => {
       HandleKeyDown(event, canvas);
     };
@@ -153,6 +139,7 @@ export default function CanvasContainer() {
     return () => {
       document.removeEventListener('keydown', handleKeyInteraction);
     };
+
   };
 
   const handlePanning = (canvas) => {
@@ -199,6 +186,7 @@ export default function CanvasContainer() {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
+
   };
 
 

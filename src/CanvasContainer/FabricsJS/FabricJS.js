@@ -5,6 +5,7 @@ import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 export default function FabricJS({ canvas }) {
   const [zoomLevel, setZoomLevel] = useState(1);
 
+
   const handleWheel = (ref, event) => {
     if (canvas) {
       const newZoomLevel = zoomLevel + event.deltaY * 0.001;
@@ -41,13 +42,15 @@ export default function FabricJS({ canvas }) {
     }
   };
 
+
+
   return (
     // <TransformWrapper maxScale={6} panning={{ activationKeys: ["Shift"] }} wheel={{ smoothStep: 0.002, activationKeys: ["Control"] }}
     //  className="border border-black">
     //   <TransformComponent >
-        <div className=" bg-slate-100 h-[calc(100vh-55px)] flex justify-center items-center" id="container">
-          <canvas id="canvas" className="border borde-black"></canvas>
-        </div>
+    <div className=" bg-slate-100 h-[calc(100vh-55px)] flex justify-center items-center" id="container" >
+      <canvas id="canvas" className="border borde-black"></canvas>
+    </div>
     //   </TransformComponent>
     // </TransformWrapper>
   );

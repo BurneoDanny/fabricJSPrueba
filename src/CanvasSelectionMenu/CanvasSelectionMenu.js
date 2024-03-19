@@ -2,18 +2,18 @@ import CanvasCard from "./CanvasCard/CanvasCard";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { fabric } from 'fabric';
+;
 
 export default function CanvasSelectionMenu() {
-    const [canvasName, setCanvasNames] = useState("Nombre del Canvas");
     const [canvasList, setCanvasList] = useState([]);
-    const [hasCanvas, setHasCanvas] = useState(false);
+    const [hasCanvas, setHasCanvas] = useState(false);;
 
     const addCanvas = () => {
-
-        const canvas = new fabric.Canvas('c', {
+        const canvas = new fabric.Canvas({
             backgroundColor: "#ccc",
             selection: true,
-            centeredScaling: true
+            centeredScaling: true,
+            lockScalingFlip: true,
         });
 
         const limiter = new fabric.Rect({
@@ -58,7 +58,6 @@ export default function CanvasSelectionMenu() {
             })
             .catch(error => {
                 console.error(error);
-                setHasCanvas(false);
             });
 
     }, []);
@@ -77,13 +76,13 @@ export default function CanvasSelectionMenu() {
                         <CanvasCard key={index} id={canvas._id} name="nombre del canvas" />
                     ))}
                     <div className="h-[200px] flex justify-center items-center">
-                        <button className="h-min bg-black text-white font-bold py-2 px-4 rounded hover:scale-110" onClick={addCanvas}>
+                        <button onClick={addCanvas} className="h-min bg-black text-white font-bold py-2 px-4 rounded hover:scale-110">
                             Agregar nuevo canvas
                         </button>
                     </div>
                 </div>
                 :
-                <button className=" bg-black text-white font-bold py-2 px-4 rounded hover:scale-110" onClick={addCanvas}>
+                <button onClick={addCanvas} className=" bg-black text-white font-bold py-2 px-4 rounded hover:scale-110">
                     Agregar nuevo canvas
                 </button>
             }
