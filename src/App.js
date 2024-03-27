@@ -16,7 +16,7 @@ function App() {
         <CanvasContainer/>
         </div>
         <div>
-        <Fiber3d/>
+
         </div>
         </div>
       </main>

@@ -10,14 +10,19 @@ import { useFrame } from '@react-three/fiber';
 export function SodaCan(props) {
   const { nodes, materials } = useGLTF('/models/SodaCan.glb')
   const meshRef = useRef(null);
+  const canvasRef = useRef(document.getElementById('canvas'))
+  const textureRef = useRef()
 
   useFrame(()=>{
     if (!meshRef.current){
         return;
     }
-
+    //console.log(props.canvas)
     //meshRef.current.rotation.x += 0.01;
     meshRef.current.rotation.y += 0.01;
+    if (textureRef.current) {
+      textureRef.current.needsUpdate = true;
+    }
   }
 
 );
@@ -29,7 +34,15 @@ export function SodaCan(props) {
         <mesh geometry={nodes.sodaCan_1_1.geometry} material={materials.greyLight} />
         <mesh geometry={nodes.sodaCan_1_2.geometry} material={materials.red} />
         <mesh geometry={nodes.sodaCan_1_3.geometry} material={materials.brownDarkest} />
-        <mesh geometry={nodes.sodaCan_1_4.geometry} material={materials.canvasArea} />
+        <mesh geometry={nodes.sodaCan_1_4.geometry} material={materials.canvasArea}  >
+        <meshBasicMaterial>
+          <canvasTexture
+            ref={textureRef}
+            attach="map"
+            image={canvasRef.current}
+          />
+        </meshBasicMaterial>
+        </mesh>
       </group>
     </group>
   )

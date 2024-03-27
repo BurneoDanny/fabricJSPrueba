@@ -2,12 +2,15 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { useRef } from "react";
 import { Mesh } from "three";
 import { SodaCan } from "./SodaCan";
-import { PerspectiveCamera } from "@react-three/drei";
+import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
+import { CanvasTexture } from "three";
+import FabricJS from "../CanvasContainer/FabricsJS/FabricJS";
 
 
 function Cube () {
 
     const meshRef = useRef(null);
+
 
 
     useFrame(()=>{
@@ -33,13 +36,15 @@ function Cube () {
 
 
 
-export default function Fiber3d(){
+export default function Fiber3d(props){
+
     return(
         <Canvas>
             <PerspectiveCamera makeDefault fov={80} position={[0,0,7]}/>
             <ambientLight/>
             <pointLight position={[10,10,10]}/>
-            <SodaCan/>
+            <OrbitControls/>
+            <SodaCan canvas={props.canvas}/>
         </Canvas>
     );
 }

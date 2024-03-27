@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { fabric } from 'fabric';
 import SideBar from '../Sidebar/Sidebar';
 import FabricJS from './FabricsJS/FabricJS';
+import Fiber3d from '../Fiber3d/Fiber3d';
 
 export default function CanvasContainer() {
   const [canvas, setCanvas] = useState(null);
@@ -332,6 +333,7 @@ export default function CanvasContainer() {
     <div className='overflow-hidden bg-green-300' style={{ minWidth: '100%', minHeight: '100%' }}>
       <SideBar onImageUpload={handleImageUpload} generateDownload={generateDownload} canvas={canvas} />
       <FabricJS />
+      <Fiber3d canvas={canvas}/>
     </div>
   );
 }
