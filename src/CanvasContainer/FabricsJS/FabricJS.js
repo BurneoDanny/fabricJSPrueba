@@ -44,11 +44,13 @@ export default function FabricJS({ canvas }) {
 
 
 
+
+
   return (
     // <TransformWrapper maxScale={6} panning={{ activationKeys: ["Shift"] }} wheel={{ smoothStep: 0.002, activationKeys: ["Control"] }}
     //  className="border border-black">
     //   <TransformComponent >
-    <div className=" bg-slate-100 h-[calc(100vh-55px)] flex justify-center items-center" id="container" >
+    <div className="h-[calc(100vh-55px)] flex justify-center items-center overflow-auto" id="container" >
       <canvas id="canvas" className="border borde-black"></canvas>
     </div>
     //   </TransformComponent>
