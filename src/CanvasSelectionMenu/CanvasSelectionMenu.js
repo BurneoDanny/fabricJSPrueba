@@ -27,6 +27,13 @@ export default function CanvasSelectionMenu() {
         setIsModalOpen(true);
     };
 
+    const updateList = (canvasId) => {
+        const newCanvasList = canvasList.filter(canvas => canvas._id !== canvasId);
+        setCanvasList(newCanvasList);
+        if (newCanvasList.length === 0) {
+            setHasCanvas(false);
+        }
+    };
 
     return (
         <section className="h-screen flex flex-col justify-start items-center mx-96">
@@ -38,7 +45,7 @@ export default function CanvasSelectionMenu() {
             {hasCanvas ?
                 <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 items-center">
                     {canvasList.map((canvas, index) => (
-                        <CanvasCard key={index} id={canvas._id} name="nombre del canvas" />
+                        <CanvasCard key={index} id={canvas._id} name="nombre del canvas" updateList={updateList} />
                     ))}
                     <div className="h-[200px] flex justify-center items-center">
                         <button onClick={openModal} className="h-min bg-black text-white font-bold py-2 px-4 rounded hover:scale-110">

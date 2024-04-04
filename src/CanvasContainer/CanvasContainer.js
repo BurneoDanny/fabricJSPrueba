@@ -8,14 +8,32 @@ import './canvas.css';
 
 import HandleKeyDown from './FabricsJS/HandleKeyDown';
 import HandleDownload from './FabricsJS/HandleDownload';
+import RightClickMenu from './RightClickMenu/RightClickMenu';
 
 export default function CanvasContainer() {
   const { id } = useParams();
   const [canvas, setCanvas] = useState(null);
   const [limiter, setLimiter] = useState(null);
+  const [showMenu, setShowMenu] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleContextMenu = (e) => {
+      e.preventDefault();
+    };
+
+    document.addEventListener('contextmenu', handleContextMenu);
+
+    return () => {
+      document.removeEventListener('contextmenu', handleContextMenu);
+    };
+  }, []);
 
 
   useEffect(() => {
+    fabric.Object.prototype.transparentCorners = false;
+    fabric.Object.prototype.cornerColor = '#051E46';
+    fabric.Object.prototype.cornerStyle = 'circle';
 
     const container = document.getElementById('container');
     const canvas = new fabric.Canvas('canvas', {
@@ -23,6 +41,7 @@ export default function CanvasContainer() {
       height: container.offsetHeight,
       backgroundColor: '#ccc',
     });
+
     canvas.off('mouse:down');
     canvas.off('object:scaling');
     canvas.off('object:modified');
@@ -30,6 +49,23 @@ export default function CanvasContainer() {
 
     axios.get(`${process.env.REACT_APP_BACKEND_URL}/canvas/get/${id}`)
       .then(response => {
+        const applyZoomAndCenterLimiter = (limiter) => {
+          const zoomLevel = 0.4;
+          canvas.setZoom(zoomLevel);
+          const canvasCenter = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+          };
+          const limiterCenter = {
+            x: limiter.left + (limiter.width * zoomLevel) / 2,
+            y: limiter.top + (limiter.height * zoomLevel) / 2,
+          };
+          const panX = canvasCenter.x - limiterCenter.x;
+          const panY = canvasCenter.y - limiterCenter.y;
+          canvas.relativePan({ x: panX, y: panY });
+          canvas.renderAll();
+        };
+
         if (response.data.content !== 'new') {
           canvas.loadFromJSON(response.data.content);
         }
@@ -43,12 +79,12 @@ export default function CanvasContainer() {
 
         });
 
+        applyZoomAndCenterLimiter(limiter);
+        setLimiter(limiter);
         canvas.add(limiter);
+        canvas.clipPath = limiter;
         limiter.sendToBack();
         canvas.renderAll();
-        setLimiter(limiter);
-
-
         let initialTop, initialLeft, initialScaleX, initialScaleY, initialAngle;
         canvas.on('mouse:down', function (e) {
           const obj = e.target;
@@ -58,6 +94,12 @@ export default function CanvasContainer() {
             initialScaleX = obj.scaleX;
             initialScaleY = obj.scaleY;
             initialAngle = obj.angle;
+            if (e.button === 3) {
+              canvas.setActiveObject(obj);
+              e.e.preventDefault();
+              setShowMenu(true);
+              setMenuPosition({ x: e.e.clientX, y: e.e.clientY });
+            }
           }
         });
 
@@ -70,7 +112,6 @@ export default function CanvasContainer() {
         canvas.on('object:modified', function (e) {
           const obj = e.target;
           if (obj && !obj.intersectsWithObject(limiter)) {
-            console.log('out of bounds');
             obj.set({
               left: initialLeft,
               top: initialTop,
@@ -96,55 +137,36 @@ export default function CanvasContainer() {
               left: Math.max(leftBoundary, Math.min(obj.left, rightBoundary)),
               top: Math.max(topBoundary, Math.min(obj.top, bottomBoundary))
             });
-
-
             canvas.renderAll();
           }
         });
 
-        canvas.setZoom(0.5);
-        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        canvas.selection = true;
+        canvas.centeredScaling = true;
+        canvas.lockScalingFlip = true;
+        canvas.stopContextMenu = true;
+        canvas.fireRightClick = true;
+        canvas.controlsAboveOverlay = true;
 
-        canvas.forEachObject((obj) => {
-          const objBoundingBox = obj.getBoundingRect();
-          minX = Math.min(minX, objBoundingBox.left);
-          minY = Math.min(minY, objBoundingBox.top);
-          maxX = Math.max(maxX, objBoundingBox.left + objBoundingBox.width);
-          maxY = Math.max(maxY, objBoundingBox.top + objBoundingBox.height);
+        canvas.on('mouse:wheel', function (opt) {
+          var delta = opt.e.deltaY;
+          var zoom = canvas.getZoom();
+          zoom *= 0.999 ** delta;
+          if (zoom > 20) zoom = 20;
+          if (zoom < 0.1) zoom = 0.1;
+          canvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
+          opt.e.preventDefault();
+          opt.e.stopPropagation();
         });
 
-        const boundingBoxCenterX = (minX + maxX) / 2;
-        const boundingBoxCenterY = (minY + maxY) / 2;
-        const viewportCenter = canvas.getCenter();
-        const deltaX = viewportCenter.left - boundingBoxCenterX;
-        const deltaY = viewportCenter.top - boundingBoxCenterY;
-        canvas.relativePan(new fabric.Point(deltaX, deltaY));
+        setCanvas(canvas);
 
       })
       .catch(error => {
         console.error(error);
       });
 
-    canvas.selection = true;
-    canvas.centeredScaling = true;
-    canvas.lockScalingFlip = true;
 
-
-
-    canvas.on('mouse:wheel', function (opt) {
-      var delta = opt.e.deltaY;
-      var zoom = canvas.getZoom();
-      zoom *= 0.999 ** delta;
-      if (zoom > 20) zoom = 20;
-      if (zoom < 0.1) zoom = 0.1;
-      canvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
-      opt.e.preventDefault();
-      opt.e.stopPropagation();
-    });
-
-
-
-    setCanvas(canvas);
     return () => {
       canvas.off('mouse:down');
       canvas.off('object:scaling');
@@ -155,49 +177,50 @@ export default function CanvasContainer() {
   }, []);
 
   useEffect(() => {
-    let isPanning = false;
-    let lastPosX = 0;
-    let lastPosY = 0;
+    if (canvas) {
+      let isPanning = false;
+      let lastPosX = 0;
+      let lastPosY = 0;
 
-    const handleMouseDown = (event) => {
-      if (event.altKey) {
-        isPanning = true;
-        lastPosX = event.clientX;
-        lastPosY = event.clientY;
+      const handleMouseDown = (event) => {
+        if (event.altKey) {
+          isPanning = true;
+          lastPosX = event.clientX;
+          lastPosY = event.clientY;
 
-        document.body.classList.add('alt-panning');
-      }
-    };
+          document.body.classList.add('alt-panning');
+        }
+      };
 
-    const handleMouseMove = (event) => {
-      if (isPanning) {
-        const deltaX = event.clientX - lastPosX;
-        const deltaY = event.clientY - lastPosY;
+      const handleMouseMove = (event) => {
+        if (isPanning) {
+          const deltaX = event.clientX - lastPosX;
+          const deltaY = event.clientY - lastPosY;
 
-        // Panning the canvas
-        canvas.relativePan({ x: deltaX, y: deltaY });
+          // Panning the canvas
+          canvas.relativePan({ x: deltaX, y: deltaY });
 
-        lastPosX = event.clientX;
-        lastPosY = event.clientY;
-      }
-    };
+          lastPosX = event.clientX;
+          lastPosY = event.clientY;
+        }
+      };
 
-    const handleMouseUp = () => {
-      isPanning = false;
+      const handleMouseUp = () => {
+        isPanning = false;
 
-      document.body.classList.remove('alt-panning');
-    };
+        document.body.classList.remove('alt-panning');
+      };
 
-    document.addEventListener('mousedown', handleMouseDown);
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+      document.addEventListener('mousedown', handleMouseDown);
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
 
-    return () => {
-      document.removeEventListener('mousedown', handleMouseDown);
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-
+      return () => {
+        document.removeEventListener('mousedown', handleMouseDown);
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
   }, [canvas]);
 
   useEffect(() => {
@@ -234,16 +257,41 @@ export default function CanvasContainer() {
     }
   };
 
+  const onAction = (action) => {
+    const activeObject = canvas.getActiveObject();
+    if (activeObject && limiter) {
+      switch (action) {
+        case 'bringToFront':
+          activeObject.bringToFront();
+          break;
+        case 'bringForward':
+          activeObject.bringForward();
+          break;
+        case 'bringBackward':
+          activeObject.sendBackwards();
+          limiter.sendToBack();
+          break;
+        case 'sendToBack':
+          activeObject.sendToBack();
+          limiter.sendToBack();
+          break;
+        default:
+          break;
+      }
+      setShowMenu(false);
+    }
+  };
 
   return (
     <>
       <SideBar canvas={canvas} generateDownload={generateDownload} />
-      <div className="h-[calc(100vh-55px)] flex justify-center items-center overflow-auto bg-white" id="container" >
+      <div className="h-[calc(100vh-55px)] flex justify-center items-center overflow-auto bg-[#ccc]" id="container" >
         <canvas id="canvas" className="border border-black"></canvas>
       </div>
       <div className='absolute right-0 w-42 h-10 bg-black text-white font-semibold text-base'>
         <button className='w-full h-full' onClick={updateCanvas}>Guardar Canvas</button>
       </div>
+      {showMenu && <RightClickMenu onClose={() => setShowMenu(false)} x={menuPosition.x} y={menuPosition.y} onAction={onAction} />}
     </>
   );
 }
